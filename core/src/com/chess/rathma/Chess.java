@@ -13,7 +13,7 @@ public class Chess extends ApplicationAdapter {
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
-		img = new Texture("assets/chessboard544.png");
+		img = new Texture(Gdx.files.internal("chessboard544.png"));
 	}
 
 	@Override
