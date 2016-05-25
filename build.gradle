@@ -69,7 +69,9 @@ project(":core") {
     dependencies {
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
-	compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+	    compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+        compile "io.netty:netty-all:4.0.36.Final"
+        compile "com.esotericsoftware:kryonet:2.+"
     }
 }
 

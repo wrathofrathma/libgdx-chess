@@ -1,9 +1,32 @@
 package com.chess.rathma;
 
 /**
- * Not sure what I want to do here. Perhaps something to do with networking and piece management?
+ * Finally useful xD
  *
  */
 public class Player {
-
+    public boolean inGame=false;
+    public Player(){}
+    public Player(String n)
+    {
+        name = n;
+    }
+    public Player(String n, int i)
+    {
+        name = n;
+        id=i;
+    }
+    public Player(String n, boolean gamestate)
+    {
+        inGame = gamestate;
+        name = n;
+    }
+    public Player(String n, boolean gamestate, int userID)
+    {
+        this.inGame = gamestate;
+        this.name = n;
+        this.id = userID;
+    }
+    public String name;
+    public int id;
 }
