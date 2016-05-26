@@ -3,9 +3,12 @@ package com.chess.rathma.Packets;
 /**
  * Created by rathma on 5/22/16.
  */
+
 public class MovePacket {
-    public MovePacket(int gameID, int x1, int y1, int x2, int y2,boolean turnswitch)
+    //Only from the server. Never outgoing.
+    public MovePacket(int gameID, int boardID, int x1, int y1, int x2, int y2,boolean turnswitch)
     {
+        this.boardID = boardID;
         this.x1 = x1;
         this.x2 = x2;
         this.y2 = y2;
@@ -13,8 +16,9 @@ public class MovePacket {
         this.gameID=gameID;
         this.turnswitch = turnswitch;
     }
-    public MovePacket(int gameID, int x1, int y1, int x2, int y2,int playerID)
+    public MovePacket(int gameID, int boardID, int x1, int y1, int x2, int y2,int playerID)
     {
+        this.boardID=boardID;
         this.playerID = playerID;
         this.x1 = x1;
         this.x2 = x2;
@@ -22,6 +26,7 @@ public class MovePacket {
         this.y1 = y1;
         this.gameID=gameID;
     }
+    public int boardID;
     public int playerID;
     public MovePacket(){}
     //String structure : LOC1 LOC2

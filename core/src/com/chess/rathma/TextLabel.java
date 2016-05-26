@@ -1,6 +1,7 @@
 package com.chess.rathma;
 
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -11,6 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.actions.RemoveActorAction;
 import com.badlogic.gdx.scenes.scene2d.actions.RunnableAction;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
 /**
@@ -19,7 +21,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 public class TextLabel extends Actor {
     public String text;
     int id; //Hack to differentiate text labels without further extending the class
-    private BitmapFont font;
+    public BitmapFont font;
     public float height;
     public float width;
     public static GlyphLayout glyphLayout;
@@ -37,9 +39,8 @@ public class TextLabel extends Actor {
      * 2 = Challenge Label ID
      * 3 = Kill screen label
      */
-
-
-    private void init(float xi, float yi){
+    public TextLabel(){}
+    public void init(float xi, float yi){
 
         glyphLayout = new GlyphLayout();
         if(text!=null && font!=null)
@@ -51,6 +52,7 @@ public class TextLabel extends Actor {
     }
     public TextLabel(String text, BitmapFont font, int id)
     {
+
         this.text = text;
         this.font = font;
         this.id = id;
@@ -62,7 +64,6 @@ public class TextLabel extends Actor {
         this.font = font;
         this.id = id;
         init(x,y);
-
     }
 
     public void clicked(){}

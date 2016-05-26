@@ -72,33 +72,36 @@ public class PieceListener extends ClickListener{
     public void touchDragged(InputEvent event, float x, float y, int pointer) {
         super.touchDragged(event, x, y, pointer);
         piece.toFront();
-        piece.setY(Gdx.graphics.getHeight()-Gdx.input.getY() - piece.getHeight()/2);
-        piece.setX(Gdx.input.getX()- piece.getWidth()/2);
+        piece.setY(((Gdx.graphics.getHeight()-Gdx.input.getY() - piece.getHeight()/2))-piece.chessBoard.getY());
+        piece.setX(((Gdx.input.getX())- piece.getWidth()/2) - piece.chessBoard.getX());
     }
 
     @Override
     public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
         super.touchUp(event, x, y, pointer, button);
-        int newx = (int)((piece.getX()+piece.getWidth()/2)/68);
+        int newx = (int)((piece.getX()+piece.getWidth()/2)/piece.boardMultiplier);
         int newy=0; //just need to initialise it.
-        if(piece.screen.gameRoom.colour== GameRoom.COLOUR.BLACK)
+        if(piece.gameRoom.colour== GameRoom.COLOUR.BLACK)
         {
-            newy = (int) ((piece.getY() + piece.getHeight() / 2) / 68);
+            newy = (int) ((piece.getY() + piece.getHeight() / 2) / piece.boardMultiplier);
             newy = piece.grabBlackLoc(newy);
         }
         else {
-            newy = (int) ((piece.getY() + piece.getHeight() / 2) / 68);
+            newy = (int) ((piece.getY() + piece.getHeight() / 2) / piece.boardMultiplier);
         }
+        System.out.println("New x & y " + x + " " + y);
         if(newx!=piece.locx ||newy!=piece.locy) {
-            piece.screen.gameRoom.attemptMove(piece, newx, newy);
+            piece.gameRoom.attemptMove(piece, newx, newy);
         }
         else
         {
-            piece.setX(piece.locx*68);
-            if(piece.screen.gameRoom.colour== GameRoom.COLOUR.BLACK)
+            piece.setX((piece.locx*piece.boardMultiplier));
+            if(piece.gameRoom.colour== GameRoom.COLOUR.BLACK) {
                 piece.setY(piece.grabBlackY());
-            else
-                piece.setY(piece.locy*68);
+            }
+            else {
+                piece.setY(piece.locy * piece.boardMultiplier);
+            }
         }
     }
 }

@@ -17,26 +17,42 @@ import java.io.IOException;
 import java.util.Vector;
 
 public class Chess extends Game{
-	public SpriteBatch batch;
-    public Array<Player> playerList;
-    public String addr = "10.0.0.43";
-    public int portno=7667;
-    public Client network;
+
+    /* Containers for the network & local information */
     public Array<GameRoom> gameRooms;
+    public Array<Challenge> challenges;
+    public Array<Player> playerList;
+    /* Currently top level to deal with persistence through screens & what happens when we get a MessagePacket
+     * Options later are to either keep this - Bad practise.
+     * Or we can create an Array of messages here, then have the ChatBox local to each screen fill with them?
+     */
+    public ChatBox chatBox;
 
 
+    /* Necessary objects */
+    public SpriteBatch batch;
+    public Client network;
+
+    /* Flags for whether our containers have been touched */
+    public boolean gameFlag;
+    public boolean challengeFlag;
+    public boolean playerListFlag;
+
+    /* Network stuff */
+    public String addr="localhost";
+    public int portno=7667;
+
+    /* Our actual identification from the network! */
     public int userID;
+    //TODO create some sort of authentication system.
     public String nickname;
-    //I have a feeling we'll need this later.
-    enum STATE {
-        MENU,
-        GAME
-    }
 
 	@Override
 	public void create () {
         playerList = new Array<Player>();
         gameRooms = new Array<GameRoom>();
+        challenges = new Array<Challenge>();
+        chatBox = new ChatBox(this);
 
         batch = new SpriteBatch();
         network = new Client();
@@ -55,7 +71,7 @@ public class Chess extends Game{
         network.getKryo().register(int[][].class);
         network.getKryo().register(BoardPosition.class);
         network.getKryo().register(GameEndPacket.class);
-
+        network.getKryo().register(ServerShutdownPacket.class);
         network.addListener(new MasterListener(this));
 
         try {
@@ -75,4 +91,33 @@ public class Chess extends Game{
         super.render();
 
 	}
+
+    public synchronized void addChallenge(ChallengePacket packet)
+    {
+        boolean exists=false;
+        //TODO make this more efficient. We hit the second loop regardless.
+        for(Challenge challenge : challenges)
+        {
+            //Let's see if it exists first.
+            if(challenge.challengeID==packet.challengeID)
+            {
+                exists=true;
+            }
+        }
+
+        for(Player player : playerList)
+        {
+            if(player.id == packet.challengerID && !exists)
+            {
+                challenges.add(new Challenge(player.name,packet.challengeID));
+
+            }
+        }
+        challengeFlag = true;
+    }
+
+
+
+
+
 }

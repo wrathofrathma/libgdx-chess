@@ -6,6 +6,7 @@ package com.chess.rathma.Packets;
 public class BoardPosition {
     public boolean request;
     public int gameID;
+    public int boardID; //Prep for bughouse chess.
     public int[][] board;
     public BoardPosition(){}
     public BoardPosition(int id, boolean request)
@@ -13,10 +14,12 @@ public class BoardPosition {
         this.gameID=id;
         this.request = request;
     }
+    /* The assumed constructor for single board games */
     public BoardPosition(int gameID) {
         //We are assuming that this is an 8x8 board map.
         this.gameID = gameID;
         this.board = new int[8][8];
+        this.boardID = -1;
         /* Send standard board state */
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {

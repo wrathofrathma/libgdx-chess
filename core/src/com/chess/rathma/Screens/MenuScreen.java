@@ -4,92 +4,155 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.freetype.*;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.RunnableAction;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.SpriteDrawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
-import com.chess.rathma.Challenge;
-import com.chess.rathma.Chess;
+import com.chess.rathma.*;
 import com.chess.rathma.Packets.ChallengeAcceptPacket;
 import com.chess.rathma.Packets.ChallengePacket;
 import com.chess.rathma.Packets.CreateGamePacket;
 import com.chess.rathma.Packets.RequestPacket;
-import com.chess.rathma.Player;
-import com.chess.rathma.TextLabel;
 
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.Vector;
+
 
 public class MenuScreen implements Screen {
-    public Stage stage;
-    BitmapFont font;
     public final Chess chess;
- //   private Timer updateTimer;
-    public MenuScreenListener menuScreenListener;
-    //We need something to house challenges in....
-    public Array<Challenge> challenges;
-    private String fontString = "TTF/SourceCodePro-Regular.ttf";
-    int challengeLabelId = 2;
-    int staticLabelId = 0;
-    int playerLabelId = 1;
 
+    /* Containers */
+    public Stage stage;
+    public Table table;
 
+    public ScrollPane playerListPane; //Will be our scrollable object housing our playerList.
+    public List playerList; //Will house the actual widgets of players.
+
+    public ScrollPane challengePane;
+    public List challengeList;
+
+    /* Style & UI stuff */
+    public BitmapFont font; //What the fuck is your purpose actually?
+    Skin menuSkin;
+
+    String backgroundString="menuBackground.png";
+    String paneBackground= "menuBackground.png";
 
     public MenuScreen(final Chess chess)
     {
         this.chess = chess;
-        challenges = new Array<Challenge>();
+        /* Initialising components */
         stage = new Stage();
-        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal(fontString));
-        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parameter.size = 16;
-        font = generator.generateFont(parameter);
-        /* Check if we're connected to server.
-            * If no, render a button that allows us to connect
-            * If yes, then retrieve a list of connected players.
-         */
-        chess.network.sendTCP(new RequestPacket(1)); //Get our UserID
-        generator.dispose();
+
+
+        /* Setting up listeners */
         Gdx.input.setInputProcessor(stage);
-        menuScreenListener = new MenuScreenListener(this);
-        chess.network.addListener(menuScreenListener);
 
-        chess.network.sendTCP(new RequestPacket(0));
-        chess.network.sendTCP(new RequestPacket(2));
-       // updatePlayerList();
-        drawChallenges();
-        drawUILabels();
-        updateTitle();
-       // updateTimer = new Timer();
-        /*
-        updateTimer.scheduleAtFixedRate(new TimerTask() {
+        /* Requesting information from the server */
+        chess.network.sendTCP(new RequestPacket(1)); //Get our UserID
+        chess.network.sendTCP(new RequestPacket(0)); //Request PlayerList
+        chess.network.sendTCP(new RequestPacket(2)); //Request challenges?
+
+
+        //TODO Stuff subject to move to show()
+        menuSkin = new Skin(Gdx.files.internal("style.json"));
+        font = menuSkin.getFont("default-font");
+
+
+        /* Setting up our display */
+        table = new Table();
+        table.setBackground(new SpriteDrawable(new Sprite(new Texture(Gdx.files.internal(backgroundString)))));
+        table.setFillParent(true);
+        table.align(Align.topLeft); //Why the fuck would someone draw from the bottom of the screen?
+        table.padLeft(20); //Padding on the left by 50px
+        table.padTop(20);
+        table.padRight(20);
+        table.padBottom(20);
+
+        stage.addActor(table);
+
+        //Enables debug lines.
+        //table.setDebug(true);
+
+        /* Organising the display! */
+        /* Giving our panes some depth by adding a background */
+        ScrollPane.ScrollPaneStyle paneStyle = new ScrollPane.ScrollPaneStyle();
+
+        playerList = new List(menuSkin);
+        playerListPane = new ScrollPane(playerList);
+        playerListPane.setStyle(paneStyle);
+
+        challengeList = new List(menuSkin);
+        challengePane = new ScrollPane(challengeList);
+        challengePane.setStyle(paneStyle);
+
+        Label challengeLabel = new Label("Challenges",menuSkin);
+        Label playerLabel = new Label("Players online",menuSkin);
+
+
+        /* Actually arranging our layout */
+        table.add(playerLabel).align(Align.left);
+        table.add(challengeLabel).align(Align.right);
+        table.row();
+        table.add(playerListPane).expandX().align(Align.topLeft).padRight(5);
+        table.add(challengePane).expandX().align(Align.topRight).padLeft(5);
+
+        /* Setting up our chat box! */
+        table.row().padTop(10).expandY();
+        table.add(chess.chatBox).align(Align.bottomLeft).expandX().expandY().padBottom(10).prefWidth(Gdx.graphics.getWidth()).width(Gdx.graphics.getWidth());
+
+
+        /* Setting up listeners for our different panes */
+        playerList.addListener(new ClickListener(){
             @Override
-            public void run() {
-                System.out.println("updateTimer-0 hallow!");
-                chess.network.sendTCP(new RequestPacket(0));
-                updatePlayerList();
-                drawUILabels();
-                drawChallenges();
+            public void clicked(InputEvent event, float x, float y) {
+                super.clicked(event, x, y);
+                if(getTapCount()>=2)
+                {
+                    chess.network.sendTCP(new ChallengePacket(((PlayerLabel)playerList.getSelected()).player.id, chess.userID, -1));
+                }
             }
-        },1000,1000*20);*/
+        });
+        challengeList.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                super.clicked(event, x, y);
+                if(getTapCount()>=2)
+                {
+                    chess.network.sendTCP(new ChallengeAcceptPacket(((ChallengeLabel)challengeList.getSelected()).challenge.challengeID,chess.userID));
+                }
+            }
+        });
 
 
-        /* We'll implement the input listener here since text is fucking hard to click
-         *
-          * In hindsight, the actor stores coordinates differently than text draws them. It was likely a flaw there.
-          * */
+
+
+    }
+    /* Only called on server shutdown */
+    public void shutdown(String message){
+        synchronized (stage.getActors()) {
+            for (Actor actor : stage.getActors()) {
+                actor.clearListeners();
+            }
+        }
+        GlyphLayout glyphLayout = new GlyphLayout(font, message);
         stage.addListener(new ClickListener()
         {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
-                System.out.println("Clicked: " + x + "," +y);
                 Array<Actor> actors = stage.getActors();
                 for(int i=0; i<actors.size;i++)
                 {
@@ -101,6 +164,7 @@ public class MenuScreen implements Screen {
                             //For some reason, unlike every other object, the location of text objects is the top left rather than bottom left.
                             if(y<=label.getY() && y>=label.getY()-label.getHeight())
                             {
+                                System.out.println("Clicked label: " + label.text);
                                 label.clicked(chess);
                                 break;
                             }
@@ -109,32 +173,16 @@ public class MenuScreen implements Screen {
                 }
             }
         });
-
-    }
-    //This should be synchronised because you can receive multiple packets at once, and the network thead isn't waiting.
-    public synchronized void challenged(ChallengePacket packet)
-    {
-        boolean exists=false;
-        for(Challenge challenge : challenges)
-        {
-            //Let's see if it exists first.
-            if(challenge.challengeID==packet.challengeID)
-            {
-                exists=true;
-            }
+        synchronized (stage.getActors()) {
+            stage.addActor(new TextLabel(message, font, (Gdx.graphics.getWidth() / 2) - (glyphLayout.width / 2), (Gdx.graphics.getHeight() / 2) - (glyphLayout.height / 2), 3) {
+                @Override
+                public void clicked(Chess chess) {
+                    super.clicked(chess);
+                    System.exit(0);
+                }
+            });
         }
-
-        /* We need to extract the username and ID to create a proper challenge */
-        for(Player player : chess.playerList)
-        {
-            if(player.id == packet.challengerID && !exists)
-            {
-                challenges.add(new Challenge(player.name,packet.challengeID));
-            }
-        }
-        drawChallenges();
     }
-
     /* Calling Gdx.graphics.setTitle() outside of the render thread most likely upsets windows.
     * By upsets, I mean literally throws a fucking tantrum and crashes the whole project. So we'll just use a state to keep track of window updates.
     * */
@@ -148,84 +196,44 @@ public class MenuScreen implements Screen {
         else
             Gdx.graphics.setTitle("Not Connected D=");
     }
-    public void drawUILabels()
-    {
-        removeLabels(0);
-        synchronized (stage.getActors()) {
-            stage.addActor(new TextLabel("Players in Queue:", font, 50, 500, staticLabelId));
-            stage.addActor(new TextLabel("Open Challenges", font, 300, 500, staticLabelId));
-        }
-    }
 
-    public void drawChallenges()
+    public void updateChallenges()
     {
-        removeLabels(challengeLabelId);
-        //Add challenge loop draw.
-        if(challenges!=null) {
-            for (int i = 0; i < challenges.size; i++) {
-                stage.addActor(new TextLabel(challenges.get(i).username, font, 300, (475 - i * 25), challengeLabelId){
-                    @Override
-                    public void clicked(Chess chess) {
-                        super.clicked(chess);
-                        //Accepting the challenge and switching screens.
-                        for(Challenge c : challenges)
-                        {
-                            if(c.username.equals(text))
-                            {
-                                /* ACCEPT CHALLENGE */
-                                chess.network.sendTCP(new ChallengeAcceptPacket(c.challengeID,chess.userID));
-                            }
-                        }
-                    }
-                });
+        System.out.println("Updating challenges!");
+        synchronized (chess.challenges)
+        {
+            Array<ChallengeLabel> challengeArray = new Array<ChallengeLabel>();
+            for(Challenge challenge : chess.challenges)
+            {
+                challengeArray.add(new ChallengeLabel(challenge));
             }
+            challengeList.setItems(challengeArray);
         }
-    }
 
-    //We are doing this to prevent concurrent access, however we need to plan ahead.
-    //I don't want to lock stage.actors because that'd freeze up the whole screen and halt the render thread...
-    public synchronized void removeLabels(int id) {
-        //Testing for now - If this causes performance issues we'll have to figure out something else.
-        synchronized (stage.getActors()) {
-            Array<Actor> removal = new Array<Actor>();
-            for (Actor actor : stage.getActors()) {
-                if (actor instanceof TextLabel) {
-                    if (((TextLabel) actor).getId() == id) {
-                        actor.clear();
-                        removal.add(actor);
-                    }
-                }
-            }
-            stage.getActors().removeAll(removal, true);
-        }
+
     }
 
     public synchronized void updatePlayerList()
     {
         //Synchronised to the playerList so we don't have any thread shenanigans
         synchronized (chess.playerList) {
-            removeLabels(playerLabelId);
-            stage.addActor(new TextLabel("Chess Lobby: " + chess.playerList.size + " players connected", font, 50, 540, playerLabelId));
-            //For every player in playerlist, create a label.
-            int i = 0; //Since we're using an itr instead of an index, we should track this.
-
-            for (Player player : chess.playerList) {
-                //Allows the network thread to catch up to the initialisation.
-                //  if(player==null) //Currently commented out to set up synchronisation, would prefer this to be broken.
-                //    break;
-                if (!player.name.equals(chess.nickname)) {
-                    stage.addActor(new TextLabel(player.name, font, 50, 475 - (i * 25), playerLabelId) {
-                        @Override
-                        public void clicked(Chess chess) {
-                            for (Player p : chess.playerList)
-                                if (p.name.equals(text))
-                                    chess.network.sendTCP(new ChallengePacket(p.id, chess.userID, -1));
-                            super.clicked(chess);
-                        }
-                    });
-                    i++;
+//            stage.addActor(new TextLabel("Chess Lobby: " + chess.playerList.size + " players connected", font, 50, 540, playerLabelId));
+            //We need this because GDX's List only takes a single array.
+            Array<PlayerLabel> labels=new Array<PlayerLabel>();
+            PlayerLabel bufferLabel;
+            //For each player in playerlist, create a label and add to our temporary array.
+            for(final Player player : chess.playerList)
+            {
+                //Let's actually check if the player ISN'T us xD
+                if(player.id!=chess.userID) {
+                    System.out.println("Adding: " +player.name);
+                    labels.add(new PlayerLabel(player));
                 }
+                //TODO maybe add a listener to the label? Unless there is one built in.
             }
+
+            //Set the items in the list to contain the list of player labels.
+            playerList.setItems(labels);
         }
      }
     @Override
@@ -235,9 +243,11 @@ public class MenuScreen implements Screen {
 
     @Override
     public void render(float delta) {
-     //   stage.act();
+        stage.act();
         if(chess.gameRooms.size>0)
         {
+            //TODO change this to this.hide() - Need to migrate most of hte constructor to the show() however.
+            //TODO Also need to properly configure this.hide() to kill listeners
             this.dispose();
             chess.setScreen(new GameScreen(chess));
         }
@@ -246,6 +256,17 @@ public class MenuScreen implements Screen {
             updateTitle();
             titleUpdate=false;
         }
+        if(chess.playerListFlag)
+        {
+            updatePlayerList();
+            chess.playerListFlag=false;
+        }
+        if(chess.challengeFlag)
+        {
+            updateChallenges();
+            chess.challengeFlag=false;
+        }
+
         Gdx.gl.glClearColor(0, 0, 0, 1); //Black with a transparent bit.
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         chess.batch.begin();
@@ -255,7 +276,7 @@ public class MenuScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-
+        stage.getViewport().update(width, height);
     }
 
     @Override
@@ -275,7 +296,6 @@ public class MenuScreen implements Screen {
 
     @Override
     public void dispose() {
-        chess.network.removeListener(menuScreenListener);
         stage.dispose();
     }
 }

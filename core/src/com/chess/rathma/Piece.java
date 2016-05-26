@@ -1,6 +1,7 @@
 package com.chess.rathma;
 
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -17,7 +18,7 @@ import com.chess.rathma.Screens.PieceListener;
 public class Piece extends Actor {
 
 
-    public TextureRegion texture;
+    public Sprite texture;
     public enum Type {
         PAWN,
         KNIGHT,
@@ -43,39 +44,34 @@ public class Piece extends Actor {
     public Piece(){
         pieceID=-1;
     }
-    public Piece(Colour c, Type t)
-    {
-        colour = c;
-        piece = t;
-    }
 
-    public int textureSize = 68;
-    /* We'll only call this for draw location! */
+    public float boardMultiplier; //Using this gets the relative location to the board.
+
     public float grabBlackY()
     {
-        if(screen.gameRoom.colour== GameRoom.COLOUR.BLACK) {
+        if(gameRoom.colour== GameRoom.COLOUR.BLACK) {
             switch (locy) {
                 case 0:
-                    return 7 * textureSize;
+                    return 7 * boardMultiplier;
                 case 1:
-                    return 6 * textureSize;
+                    return 6 * boardMultiplier;
                 case 2:
-                    return 5 * textureSize;
+                    return 5 * boardMultiplier;
                 case 3:
-                    return 4 * textureSize;
+                    return 4 * boardMultiplier;
                 case 4:
-                    return 3 * textureSize;
+                    return 3 * boardMultiplier;
                 case 5:
-                    return 2 * textureSize;
+                    return 2 * boardMultiplier;
                 case 6:
-                    return 1 * textureSize;
+                    return 1 * boardMultiplier;
                 case 7:
-                    return 0 * textureSize;
+                    return 0 * boardMultiplier;
             }
             return 0;
         }
         else{
-            return locy*textureSize;
+            return locy*boardMultiplier;
         }
     }
 
@@ -125,29 +121,32 @@ public class Piece extends Actor {
             return 0;
         }
     }
-    public GameScreen screen;
-    public Piece(Colour c, Type t, int x, int y, TextureRegion texture, GameScreen screen)
+    public GameRoom gameRoom;
+    public ChessBoard chessBoard;
+
+    public Piece(Colour c, Type t, int x, int y, TextureRegion texture, GameRoom gameRoom, ChessBoard chessBoard)
     {
-        pieceID=1;
-        this.screen = screen;
-        this.texture = texture;
+        this.chessBoard = chessBoard;
+        pieceID=1;//Why the fuck is this 1?
+        this.gameRoom = gameRoom;
+        this.texture = new Sprite(texture);
         colour = c;
         piece = t;
         this.locx = x;
         this.locy=y;
-
         setTouchable(Touchable.enabled);
-
-        setBounds(x*textureSize,grabBlackY(),textureSize,textureSize);
+        boardMultiplier = ((chessBoard.getWidth() + chessBoard.getHeight())/2)/8;
+        setBounds(x*boardMultiplier,grabBlackY(),boardMultiplier,boardMultiplier);
         this.addListener(new PieceListener(this));
+
     }
 
     public float trueY()
     {
-        if(screen.gameRoom.colour== GameRoom.COLOUR.BLACK)
+        if(gameRoom.colour== GameRoom.COLOUR.BLACK)
             return grabBlackY();
         else
-            return locy*textureSize;
+            return locy*boardMultiplier;
     }
     public void clicked()
     {
@@ -157,7 +156,7 @@ public class Piece extends Actor {
     @Override
     public void draw(Batch batch, float parentAlpha) {
         super.draw(batch, parentAlpha);
-        batch.draw(texture, getX(), getY());
+        batch.draw(texture, getX(), getY(), boardMultiplier,boardMultiplier);
 
 
     }

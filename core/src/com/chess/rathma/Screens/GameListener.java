@@ -26,11 +26,14 @@ public class GameListener extends Listener{
             System.out.println("Board position packet received");
             BoardPosition packet = (BoardPosition)object;
             //First we can check if the activeGameID fits, if not we search for it in the array. We can separate the triggering of events this way.
+
+            //TODO check for boardID
             if(packet.gameID==screen.activeGameID)
             {
                 System.out.println("Found Game ID");
                 /* Trigger screen events */
                 screen.gameRoom.board = packet.board;
+                screen.board.spawnPieces();
             }
             else
             {
@@ -40,6 +43,7 @@ public class GameListener extends Listener{
                     if(room.gameID == packet.gameID)
                     {
                         room.board = packet.board;
+                        screen.board.spawnPieces();
                     }
                 }
             }
@@ -55,7 +59,7 @@ public class GameListener extends Listener{
             /* Server commands are absolute! */
             Piece piece = screen.gameRoom.getPiece(packet.x1,packet.y1);
             if(piece.pieceID!=-1) {
-                screen.gameRoom.Move(piece, packet.x2, packet.y2,screen.stage.getActors());
+                screen.gameRoom.Move(piece, packet.x2, packet.y2,screen.board.pieces.getChildren());
                 screen.boardUpdated();
             }
             else

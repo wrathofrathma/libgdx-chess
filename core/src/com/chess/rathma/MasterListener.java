@@ -1,13 +1,13 @@
 package com.chess.rathma;
 
 
-import com.chess.rathma.Packets.CreateGamePacket;
-import com.chess.rathma.Packets.MessagePacket;
-import com.chess.rathma.Packets.MovePacket;
+import com.badlogic.gdx.Game;
+import com.badlogic.gdx.utils.Array;
+import com.chess.rathma.Packets.*;
 
 
-import com.chess.rathma.Packets.PlayerInfoPacket;
 import com.chess.rathma.Screens.GameScreen;
+import com.chess.rathma.Screens.MenuScreen;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 
@@ -26,7 +26,8 @@ public class MasterListener extends Listener{
         if(object instanceof MessagePacket)
         {
             MessagePacket mp = (MessagePacket) object;
-            System.out.println(mp.message);
+            //TODO change this logic to deal with structural changes to Chess where the chatbox is located.
+            chess.chatBox.addMessage(mp);
         }
         else if(object instanceof String)
         {
@@ -41,7 +42,6 @@ public class MasterListener extends Listener{
 
         else if(object instanceof PlayerInfoPacket)
         {
-            System.out.println("Received PlayerInfoPacket");
             PlayerInfoPacket packet = (PlayerInfoPacket)object;
             if(packet.specialID==true)
             {
@@ -49,7 +49,96 @@ public class MasterListener extends Listener{
                 chess.nickname=packet.username;
             }
         }
+        else if(object instanceof ServerShutdownPacket)
+        {
+            ServerShutdownPacket packet = (ServerShutdownPacket) object;
+            System.err.println(packet.message);
+            if(chess.getScreen() instanceof GameScreen)
+            {
+                GameScreen screen = (GameScreen) chess.getScreen();
+                screen.shutdown(packet.message);
+            }
+            else if(chess.getScreen() instanceof MenuScreen)
+            {
+                MenuScreen screen = (MenuScreen) chess.getScreen();
+                screen.shutdown(packet.message);
 
+            }
+        }
+        else if(object instanceof PlayerListPacket)
+        {
+            Array<Player> removal = new Array<Player>();
+            PlayerListPacket plp = (PlayerListPacket) object;
+            boolean exists=false;
+            int index=0; //Tracks where the gameState boolean is
+            synchronized (chess.playerList) {
+            /* Adding users not found in the local list */
+                for (String username : plp.usernames) {
+                    exists = false;
+                    for (Player player : chess.playerList) {
+                        if (player.name.equals(username))
+                            exists = true;
+                    }
+                    if (!exists) {
+                        chess.playerList.add(new Player(username, plp.gameState[index], plp.userID[index]));
+
+                    }
+                    index++;
+                }
+
+            /* Removing players no longer online. We also need to do it this way to avoid Concurrent Access exceptions */
+                for (Player player : chess.playerList) {
+                    boolean found = false;
+                    for (String username : plp.usernames) {
+                        if (username.equals(player.name))
+                            found = true;
+                    }
+                    if (!found) {
+                        removal.add(player);
+                    }
+                }
+            }
+            Array<Challenge> rmChallenge = new Array<Challenge>();
+            /* Remove all current challenges before removing the player */
+            for(Player p : removal)
+            {
+                for(Challenge c : chess.challenges)
+                {
+                    if(c.username.equals(p.name))
+                    {
+                        rmChallenge.add(c);
+                    }
+                }
+            }
+            if(rmChallenge.size>0) {
+                chess.challenges.removeAll(rmChallenge, true);
+            }
+            if(removal.size>0) {
+                synchronized (chess.playerList) {
+                    chess.playerList.removeAll(removal, true);
+                }
+            }
+
+            chess.challengeFlag = true;
+            chess.playerListFlag = true;
+            if(chess.getScreen() instanceof MenuScreen)
+            {
+                ((MenuScreen) chess.getScreen()).titleUpdate = true;
+            }
+        }
+        else if(object instanceof ChallengePacket)
+        {
+            ChallengePacket challenge = (ChallengePacket)object;
+            chess.addChallenge(challenge);
+            chess.challengeFlag=true;
+        }
+        else if(object instanceof CreateGamePacket)
+        {
+            CreateGamePacket packet = (CreateGamePacket)object;
+            synchronized (chess.gameRooms) {
+                chess.gameRooms.add(new GameRoom(packet.gameID, packet.p1, packet.p2, chess, packet.white));
+            }
+        }
     }
 
     public void disconnected(Connection connection)

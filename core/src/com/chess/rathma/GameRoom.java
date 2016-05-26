@@ -8,16 +8,20 @@ import com.chess.rathma.Packets.MovePacket;
 import com.chess.rathma.Screens.GameScreen;
 
 /**
- * This will hold both players information that is shared by the server(ELO, colour, etc)
- *
- * Should also hold the individual boardstates so you can have separate games going.
- * and an ID for the game room.
- *
+ * Holds the absolute board state(s)
+ * Computes move logic
+ * Contains
+ **** player IDs
+ *  * usernames
+ *  * Player colour - Determines if we flip the coordinates
+ *  *
  *
  */
 public class GameRoom {
     public int gameID;
+    //TODO change board to be an array of boards to account for bughouse chess. We need board IDs
     public int[][] board;
+    //TODO change player IDs and usernames to an Array<Player> structure.
     public int p1, p2; //Player IDs
     public String player1, player2; //Player usernames, for TextLabel purposes.
     private Chess chess;
@@ -57,7 +61,6 @@ public class GameRoom {
     {
    //     System.out.println("Game over!");
      //   System.out.println(packet.winnerUsername + " wins on condition: " + packet.condition);
-        System.out.println("In endGame()");
         state = GameState.ENDFLAG;
         gameEnd = packet;
 
@@ -72,7 +75,7 @@ public class GameRoom {
 
     public Piece getPiece(int currentX, int currentY)
     {
-        for(Actor actor : ((GameScreen)chess.getScreen()).stage.getActors())
+        for(Actor actor : ((GameScreen)chess.getScreen()).board.pieces.getChildren())
         {
             if(actor instanceof Piece)
             {
@@ -87,6 +90,10 @@ public class GameRoom {
         return new Piece(); //Should hopefully never fire.
     }
 
+    /* Should only be called by the server - The instructions are absolute & the board WILL be changed to this
+     * Probably need another function or packet for adding/modifying a piece value from the server(pawn promotion or bughouse/crazyhouse chess dropping pieces)
+      * */
+    /* Expected input: Piece's old X & Y, new coordinates */
     public void Move(Piece piece, int newx, int newy, Array<Actor> actors)
     {
         board[newx][newy]=board[piece.locx][piece.locy];
@@ -106,35 +113,35 @@ public class GameRoom {
         piece.locx = newx;
         piece.locy = newy;
         /* Board position */
-        if(piece.screen.gameRoom.colour==COLOUR.BLACK)
+        if(piece.gameRoom.colour==COLOUR.BLACK)
             piece.setY(piece.grabBlackY());
         else
-            piece.setY(piece.locy*68);
-        piece.setX(piece.locx*68);
-
+            piece.setY(piece.locy*piece.boardMultiplier);
+        piece.setX(piece.locx*piece.boardMultiplier);
     }
-    public boolean attemptMove(Piece piece, int newx, int newy){
-        /* if isValidMove(piece) returns true, we'll check with the server. */
-        //Let's unpack the origin position & the new position
 
+    /* Piece current and destination locations */
+    /* This will be called by the client when we attempt a move */
+    public boolean attemptMove(Piece piece, int newx, int newy){
+        System.out.println("Attempting move: " + newx + " " + newy);
         if(isValidMove(piece, newx, newy))
         {
-            piece.setX(piece.locx*68);
-            if(piece.screen.gameRoom.colour==COLOUR.BLACK)
+            piece.setX(piece.locx*piece.boardMultiplier);
+            if(piece.gameRoom.colour==COLOUR.BLACK)
                 piece.setY(piece.grabBlackY());
             else
-                piece.setY(piece.locy*68);
-            chess.network.sendTCP(new MovePacket(piece.screen.activeGameID,piece.locx, piece.locy, newx, newy,chess.userID));
+                piece.setY(piece.locy*piece.boardMultiplier);
+            chess.network.sendTCP(new MovePacket(piece.gameRoom.gameID,piece.chessBoard.boardID,piece.locx, piece.locy, newx, newy,chess.userID));
             return true;
         }
         else
         {
             //Return back to original position & don't fire a packet
-            piece.setX(piece.locx*68);
-            if(piece.screen.gameRoom.colour==COLOUR.BLACK)
+            piece.setX(piece.locx*piece.boardMultiplier);
+            if(piece.gameRoom.colour==COLOUR.BLACK)
                 piece.setY(piece.grabBlackY());
             else
-                piece.setY(piece.locy*68);
+                piece.setY(piece.locy*piece.boardMultiplier);
         }
 
         return true;
