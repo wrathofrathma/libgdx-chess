@@ -9,10 +9,13 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.ui.Container;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.Widget;
 import com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.SpriteDrawable;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 
 /** This is what we'll extend to house individual containers...
@@ -39,7 +42,7 @@ import com.badlogic.gdx.utils.Array;
 //TODO Add a skin - It is more efficient for drawing these things. Also allows us to apply logic outside of the code, such as the dimensions of pieces.
 //It'd be pretty bad practise to reload the same resource just because we have multiple boards....>.>
 //How about we accept a TextureRegion[][]?
-public class ChessBoard extends WidgetGroup {
+public class ChessBoard extends Container {
 
     /* Containers */
 
@@ -70,45 +73,74 @@ public class ChessBoard extends WidgetGroup {
      */
     /* Board texture stuff */
     public Sprite texture; //Will house the board texture
-    public String boardTexture = "defaultboard544.png";
+    public String boardTexture = "defaultboard600.png";
+    //public String boardTexture = "defaultboard544.png";
 
     public int boardID; //Might need this in the future for differentiating boards.
-
+    public int promotionLock=-1; //As long as this isn't between 0-7 it isn't locked.
     public ChessBoard(TextureRegion[][] regions, GameRoom gameRoom)
     {
+
         this.regions = regions;
         this.gameRoom = gameRoom;
+
         loadBoard();
     }
 
-    public void resize(int width, int height)
-    {
-
+    /* You know what, fuck this...let's just lock the size */
+    @Override
+    protected void sizeChanged() {
+        super.sizeChanged();
+        System.out.println("ChessBoard size changed!!");
 
 
     }
+    /* MUST be called before setting layout stuff in GameScreen */
     public void loadBoard()
     {
-     /* Expected input - String, File descriptor leading to png, jpg, or a text file with instructions on the boarder.
-     * Anything without a text file description will be loaded assumed it has no boarder.02
-     */
-
+        /* Set up our background of each board. */
+        this.align(Align.bottomLeft);
         texture = new Sprite(new Texture(Gdx.files.internal(boardTexture)));
+        this.setBackground(new SpriteDrawable(texture));
         pieces = new WidgetGroup();
+        /* This sets our container's X & Y to be relative to it's location & pieces to do the same thing */
+        this.setTransform(true);
         pieces.setTransform(true);
-        setBounds(0,0,Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
-        pieces.setBounds(0,0,this.getWidth(),this.getHeight());
+        pieces.setBounds(0,0,this.getPrefWidth(),this.getPrefHeight());
+        pieces.setFillParent(true);
+        setBounds(0,0,this.getPrefWidth(),this.getPrefHeight());
+
+        /* We probably want to be touchable xD That would be beneficial to making a game */
         setTouchable(Touchable.enabled);
         pieces.setTouchable(Touchable.enabled);
 
-        addActor(pieces);
-        texture.setBounds(this.getX(),this.getY(),this.getWidth(),this.getHeight());
-
+        /* Uh, yeah we sort of need to have this here xD Containers can only have one actor */
+        setActor(pieces);
 
         if(gameRoom!=null && gameRoom.colour== GameRoom.COLOUR.BLACK)
             texture.flip(true,false);
 
     }
+
+    public void promotionDialog(int x){
+        synchronized (pieces.getChildren()) {
+            pieces.addActor(new PromotionWidget(this.gameRoom, this, x));
+        }
+    }
+    public void releasePromotion()
+    {
+        synchronized (pieces.getChildren()) {
+            Array<Actor> removal=new Array<Actor>();
+            for (Actor actor : pieces.getChildren()) {
+                if (actor instanceof PromotionWidget) {
+                    removal.add(actor);
+                }
+            }
+            pieces.getChildren().removeAll(removal,true);
+        }
+    }
+
+
     public void loadBoard(String _boardTexture)
     {
         boardTexture = _boardTexture;
@@ -116,86 +148,134 @@ public class ChessBoard extends WidgetGroup {
             texture.getTexture().dispose();
         loadBoard();
 
-
     }
 
-    //TODO we'll just have this only ever be called by the server and FORCE this to happen. Should do it after receiving a BoardPosition Packet.
-    public synchronized void spawnPieces()
+    public Piece getPiece(int x, int y)
     {
-        /* Spawn pieces based on the current activeGameID */
-        //Our board is 544x544, that's 68x68 per square.
-        /* Let's check for any lingering pieces before spawning actually */
-        Array<Piece> removal=new Array<Piece>();
-        for(Actor actor : pieces.getChildren())
+        Piece p;
+        synchronized (pieces.getChildren())
         {
-            if(actor instanceof Piece)
+            for(Actor actor : pieces.getChildren())
             {
-                removal.add((Piece)actor);
-            }
-        }
-        if(removal.size>0) {
-            pieces.getChildren().removeAll(removal, true);
-        }
-        //TODO Configure for the boardID instead of assuming a single board.
-        if (gameRoom.board != null) {
-            for (int i = 0; i < 8; i++) {
-                for (int j = 0; j < 8; j++) {
-                    if (gameRoom.board[i][j] >= 0 && gameRoom.board[i][j] <= 11) {
-                        switch (gameRoom.board[i][j]) {
-                            case 0:
-                                pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.KING, i, j, regions[0][0], gameRoom,this));
-                                break;
-                            case 1:
-                                pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.QUEEN, i, j, regions[0][1], gameRoom,this));
-                                break;
-                            case 2:
-                                pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.ROOK, i, j, regions[0][2], gameRoom,this));
-                                break;
-                            case 3:
-                                pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.KNIGHT, i, j, regions[0][3], gameRoom,this));
-                                break;
-                            case 4:
-                                pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.BISHOP, i, j, regions[0][4], gameRoom,this));
-                                break;
-                            case 5:
-                                pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.PAWN, i, j, regions[0][5], gameRoom,this));
-                                break;
-                            case 6:
-                                pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.KING, i, j, regions[1][0], gameRoom,this));
-                                break;
-                            case 7:
-                                pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.QUEEN, i, j, regions[1][1], gameRoom,this));
-                                break;
-                            case 8:
-                                pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.ROOK, i, j, regions[1][2], gameRoom,this));
-                                break;
-                            case 9:
-                                pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.KNIGHT, i, j, regions[1][3], gameRoom,this));
-                                break;
-                            case 10:
-                                pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.BISHOP, i, j, regions[1][4], gameRoom,this));
-                                break;
-                            case 11:
-                                pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.PAWN, i, j, regions[1][5], gameRoom,this));
-                                break;
-
-                        }
-                    }
-
+                if(actor instanceof Piece)
+                {
+                    if(((Piece)actor).locx==x && ((Piece)actor).locy==y)
+                        return (Piece)actor;
                 }
             }
+            return null;
         }
-        else {
-            System.out.println("Trying to generate pieces for a board that doesn't exist.");
-        }
+    }
 
+
+    public void promotionUpdate(int x, int y)
+    {
+        switch(gameRoom.board[x][y]) {
+            case 1:
+                getPiece(x, y).texture = new Sprite(regions[0][1]);
+                break;
+            case 2:
+                getPiece(x, y).texture = new Sprite(regions[0][2]);
+                break;
+            case 3:
+                getPiece(x, y).texture = new Sprite(regions[0][3]);
+                break;
+            case 4:
+                getPiece(x, y).texture = new Sprite(regions[0][4]);
+                break;
+            case 7:
+                getPiece(x, y).texture = new Sprite(regions[1][1]);
+                break;
+            case 8:
+                getPiece(x, y).texture = new Sprite(regions[1][2]);
+                break;
+            case 9:
+                getPiece(x, y).texture = new Sprite(regions[1][3]);
+                break;
+            case 10:
+                getPiece(x, y).texture = new Sprite(regions[1][4]);
+                break;
+        }
+    }
+    public void spawnPieces()
+    {
+        synchronized (pieces.getChildren()) {
+        /* Spawn pieces based on the current activeGameID */
+        /* Let's check for any lingering pieces before spawning actually */
+            Array<Piece> removal = new Array<Piece>();
+            for (Actor actor : pieces.getChildren()) {
+                if (actor instanceof Piece) {
+                    removal.add((Piece) actor);
+                }
+            }
+            if (removal.size > 0) {
+                pieces.getChildren().removeAll(removal, true);
+            }
+            //TODO Configure for the boardID instead of assuming a single board.
+            if (gameRoom.board != null) {
+                for (int i = 0; i < 8; i++) {
+                    for (int j = 0; j < 8; j++) {
+                        if (gameRoom.board[i][j] >= 0 && gameRoom.board[i][j] <= 11) {
+                            switch (gameRoom.board[i][j]) {
+                                case 0:
+                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.KING, i, j, regions[0][0], gameRoom, this, false));
+                                    break;
+                                case 1:
+                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.QUEEN, i, j, regions[0][1], gameRoom, this, false));
+                                    break;
+                                case 2:
+                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.ROOK, i, j, regions[0][2], gameRoom, this, false));
+                                    break;
+                                case 3:
+                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.KNIGHT, i, j, regions[0][3], gameRoom, this, false));
+                                    break;
+                                case 4:
+                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.BISHOP, i, j, regions[0][4], gameRoom, this, false));
+                                    break;
+                                case 5:
+                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.PAWN, i, j, regions[0][5], gameRoom, this, false));
+                                    break;
+                                case 6:
+                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.KING, i, j, regions[1][0], gameRoom, this, false));
+                                    break;
+                                case 7:
+                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.QUEEN, i, j, regions[1][1], gameRoom, this, false));
+                                    break;
+                                case 8:
+                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.ROOK, i, j, regions[1][2], gameRoom, this, false));
+                                    break;
+                                case 9:
+                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.KNIGHT, i, j, regions[1][3], gameRoom, this, false));
+                                    break;
+                                case 10:
+                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.BISHOP, i, j, regions[1][4], gameRoom, this, false));
+                                    break;
+                                case 11:
+                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.PAWN, i, j, regions[1][5], gameRoom, this, false));
+                                    break;
+
+                            }
+                        }
+
+                    }
+                }
+            } else {
+                System.out.println("Trying to generate pieces for a board that doesn't exist.");
+            }
+        }
+        layout();
     }
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
         super.draw(batch, parentAlpha);
-        texture.draw(batch);
+        //TODO watch me for a ConcurrentAccessException later!
         pieces.draw(batch, parentAlpha); //Why did you throw a null pointer exception after about 200 games?
+        if(promotionLock>=0 && promotionLock<=7)
+        {
+            promotionDialog(promotionLock);
+            promotionLock=-1;
+        }
     }
     public void dispose()
     {

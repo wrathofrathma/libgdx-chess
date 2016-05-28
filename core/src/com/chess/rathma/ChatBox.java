@@ -1,19 +1,12 @@
 package com.chess.rathma;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.scenes.scene2d.Actor;
+
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.List;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Array;
 import com.chess.rathma.Packets.MessagePacket;
 
 
@@ -24,23 +17,22 @@ import com.chess.rathma.Packets.MessagePacket;
  */
 public class ChatBox extends WidgetGroup{
     /* Containers */
-    private Array<MessageLabel> messageArray;
-    public List messageList;
     public ScrollPane scrollPane;
     public TextField textField;
-    public Table table;
+    public Table container; //Our primary table for organising the elements of our chat UI
     public Skin chatSkin;
+    public Table chatTable; //The table nested inside of our scroll pane to display our images. It's a pain in the dick, but it's the best way.
+
     public final Chess chess;
     public ChatBox(final Chess chess){
         /* Initialising all of our chat stuffs */
         this.chess = chess;
-        table = new Table();
-        chatSkin = new Skin(Gdx.files.internal("style.json"));
-        messageArray = new Array<MessageLabel>();
+        container = new Table();
+        chatTable = new Table();
+        chatSkin = new Skin(Gdx.files.internal("chatStyle.json"));
+        scrollPane = new ScrollPane(chatTable);
 
-
-        messageList = new List(chatSkin);
-        scrollPane = new ScrollPane(messageList);
+        /* We want to disable scrolling along X since we're going to figure out this word wrapping */
         scrollPane.setScrollingDisabled(true, false);
 
         /* Setting up our textField */
@@ -58,14 +50,32 @@ public class ChatBox extends WidgetGroup{
             }
         });
 
-
-        //table.setDebug(true);
         /* Organising everything */
-        addActor(table);
-        table.setFillParent(true);
-        table.add(scrollPane).expandX().padBottom(10).expandY().minHeight(150).minWidth(300).prefWidth(504).align(Align.bottomLeft);
-        table.row().expandX();
-        table.add(textField).expandX().align(Align.bottomLeft).minWidth(300).prefWidth(504);
+        addActor(container);
+        container.setFillParent(true);
+        container.add(scrollPane)
+                .expandX().expandY()
+                .padBottom(10)
+                .minHeight(150)
+                .minWidth(560)
+                .maxHeight(250)
+                .maxWidth(1200) //This is mostly for if we decide to expand during bughouse.
+                .prefWidth(560)
+                .align(Align.bottomLeft)
+                .prefHeight(200);
+        container.row().expandX();
+        container.add(textField)
+                .expandX()
+                .align(Align.bottomLeft)
+                .minWidth(560)
+                .prefWidth(560);
+
+        /* Setting up our chatTable */
+        chatTable.setWidth(scrollPane.getPrefWidth());
+        chatTable.setFillParent(true);
+        chatTable.align(Align.bottomLeft);
+
+
 
     }
 
@@ -73,12 +83,19 @@ public class ChatBox extends WidgetGroup{
     /* Whenever a message is added, we need to add it to our array messageArray, then add them to our messageList  */
     public synchronized void addMessage(String message)
     {
-        System.out.println("Adding to message queue: " + message);
-        messageArray.add(new MessageLabel(message,chatSkin));
-        messageList.setItems(messageArray);
+
+        Label messageLabel = new Label(message,chatSkin);
+        messageLabel.setWrap(true);
+        //chatTable.row().minHeight(20).minWidth(chatTable.getWidth());
+        chatTable.row();
+        chatTable.add(messageLabel)
+                .align(Align.bottomLeft)
+                .prefWidth(chatTable.getWidth())
+                .prefHeight(messageLabel.getGlyphLayout().height)
+                .padTop(1).padBottom(1);
+
 
         /* On receive message, if the scroll is at 100% to the bottom we want to keep it snapped there */
-
         if(scrollPane.isScrollY()) {
             scrollPane.layout();
             scrollPane.setScrollY(scrollPane.getMaxY());

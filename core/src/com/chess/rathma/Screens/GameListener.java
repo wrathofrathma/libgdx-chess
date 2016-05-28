@@ -1,10 +1,9 @@
 package com.chess.rathma.Screens;
 
 import com.badlogic.gdx.Game;
+import com.chess.rathma.ChessBoard;
 import com.chess.rathma.GameRoom;
-import com.chess.rathma.Packets.BoardPosition;
-import com.chess.rathma.Packets.GameEndPacket;
-import com.chess.rathma.Packets.MovePacket;
+import com.chess.rathma.Packets.*;
 import com.chess.rathma.Piece;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
@@ -80,6 +79,34 @@ public class GameListener extends Listener{
                         room.endGame(packet);
                     }
                 }
+            }
+        }
+        else if(object instanceof PromotionAccept)
+        {
+            System.out.println("Received promotionaccept");
+            PromotionAccept packet = (PromotionAccept) object;
+            if(packet.gameID==screen.activeGameID)
+            {
+                screen.board.releasePromotion();
+                for(GameRoom room : screen.chess.gameRooms)
+                {
+                    if(room.gameID==packet.gameID)
+                    {
+                        room.changeID(packet.pieceX,packet.pieceY,packet.newID);
+                        screen.board.promotionUpdate(packet.pieceX,packet.pieceY);
+                    }
+                }
+            }
+            else
+            {
+                System.err.println("What the fuck gameID did you send in PromotionAccept?");
+            }
+        }
+        else if(object instanceof PromotionPacket)
+        {
+            PromotionPacket packet = (PromotionPacket)object;
+            if(screen.board.gameRoom.gameID==packet.gameID) {
+                screen.board.promotionLock = packet.pawnx;
             }
         }
     }

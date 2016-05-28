@@ -39,9 +39,9 @@ public class Chess extends Game{
     public boolean playerListFlag;
 
     /* Network stuff */
-    public String addr="[2601:145:c300:4910:9232:47cc:a8bd:c810]"; //TODO change address later.
+    //public String addr="[2601:145:c300:4910:9232:47cc:a8bd:c810]"; //TODO change address later.
     //public String addr="localhost";
-   // public String addr="2601:145:c300:4910::b46c";
+    public String addr="2601:145:c300:4910::b46c";
     public int portno=7667;
 
     /* Our actual identification from the network! */
@@ -74,6 +74,9 @@ public class Chess extends Game{
         network.getKryo().register(BoardPosition.class);
         network.getKryo().register(GameEndPacket.class);
         network.getKryo().register(ServerShutdownPacket.class);
+        network.getKryo().register(PromotionPacket.class);
+        network.getKryo().register(PromotionAccept.class);
+
         network.addListener(new MasterListener(this));
 
         try {

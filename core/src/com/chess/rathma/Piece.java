@@ -1,5 +1,6 @@
 package com.chess.rathma;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -40,12 +41,38 @@ public class Piece extends Actor {
     public int locx;
     public int locy;
 
-
     public Piece(){
         pieceID=-1;
     }
 
     public float boardMultiplier; //Using this gets the relative location to the board.
+    public float grabBlackY(int y)
+    {
+        if(gameRoom.colour== GameRoom.COLOUR.BLACK) {
+            switch (y) {
+                case 0:
+                    return 7 * boardMultiplier;
+                case 1:
+                    return 6 * boardMultiplier;
+                case 2:
+                    return 5 * boardMultiplier;
+                case 3:
+                    return 4 * boardMultiplier;
+                case 4:
+                    return 3 * boardMultiplier;
+                case 5:
+                    return 2 * boardMultiplier;
+                case 6:
+                    return 1 * boardMultiplier;
+                case 7:
+                    return 0 * boardMultiplier;
+            }
+            return 0;
+        }
+        else{
+            return y*boardMultiplier;
+        }
+    }
 
     public float grabBlackY()
     {
@@ -124,20 +151,39 @@ public class Piece extends Actor {
     public GameRoom gameRoom;
     public ChessBoard chessBoard;
 
-    public Piece(Colour c, Type t, int x, int y, TextureRegion texture, GameRoom gameRoom, ChessBoard chessBoard)
+
+
+    public Piece(Colour c, Type t, int x, int y, TextureRegion texture, GameRoom gameRoom, ChessBoard chessBoard,boolean promo)
     {
-        this.chessBoard = chessBoard;
-        pieceID=1;//Why the fuck is this 1?
-        this.gameRoom = gameRoom;
-        this.texture = new Sprite(texture);
-        colour = c;
-        piece = t;
-        this.locx = x;
-        this.locy=y;
-        setTouchable(Touchable.enabled);
-        boardMultiplier = ((chessBoard.getWidth() + chessBoard.getHeight())/2)/8;
-        setBounds(x*boardMultiplier,grabBlackY(),boardMultiplier,boardMultiplier);
-        this.addListener(new PieceListener(this));
+        if(!promo) {
+            this.chessBoard = chessBoard;
+            pieceID = 1;//Why the fuck is this 1?
+            this.gameRoom = gameRoom;
+            this.texture = new Sprite(texture);
+            colour = c;
+            piece = t;
+            this.locx = x;
+            this.locy = y;
+            setTouchable(Touchable.enabled);
+            boardMultiplier = ((chessBoard.getWidth() + chessBoard.getHeight()) / 2) / 8;
+            setBounds(x * boardMultiplier, grabBlackY(), boardMultiplier, boardMultiplier);
+            this.addListener(new PieceListener(this));
+        }
+        else
+        {
+            this.pieceID=1;
+            this.chessBoard = chessBoard;
+            this.gameRoom = gameRoom;
+            this.texture = new Sprite(texture);
+            colour = c;
+            piece = t;
+            this.locy=y;
+            this.locx=x;
+            setTouchable(Touchable.enabled);
+            boardMultiplier = ((chessBoard.getWidth() + chessBoard.getHeight()) / 2) / 8;
+
+            setBounds(x*boardMultiplier,grabBlackY(),boardMultiplier,boardMultiplier);
+        }
 
     }
 

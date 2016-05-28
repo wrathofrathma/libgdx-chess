@@ -24,7 +24,7 @@ public class GameRoom {
     //TODO change player IDs and usernames to an Array<Player> structure.
     public int p1, p2; //Player IDs
     public String player1, player2; //Player usernames, for TextLabel purposes.
-    private Chess chess;
+    public Chess chess;
     public GameEndPacket gameEnd;
     public enum COLOUR {
         WHITE,
@@ -66,6 +66,15 @@ public class GameRoom {
 
     }
 
+    /* Absolute command from the server */
+    public void changeID(int x, int y, int newID)
+    {
+        //Still should check the bounds
+        if((x<=7 && x>=0) && (y<=7 && y>=0))
+        {
+            board[x][y]=newID;
+        }
+    }
 
     public boolean isValidMove(Piece piece, int newx, int newy){
         /* Will check simple movement logic */
@@ -89,7 +98,11 @@ public class GameRoom {
         System.err.println("Piece not found.");
         return new Piece(); //Should hopefully never fire.
     }
+    public void tryPromote(Piece piece)
+    {
 
+
+    }
     /* Should only be called by the server - The instructions are absolute & the board WILL be changed to this
      * Probably need another function or packet for adding/modifying a piece value from the server(pawn promotion or bughouse/crazyhouse chess dropping pieces)
       * */

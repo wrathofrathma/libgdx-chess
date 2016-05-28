@@ -76,10 +76,7 @@ public class MenuScreen implements Screen {
         table.setBackground(new SpriteDrawable(new Sprite(new Texture(Gdx.files.internal(backgroundString)))));
         table.setFillParent(true);
         table.align(Align.topLeft); //Why the fuck would someone draw from the bottom of the screen?
-        table.padLeft(20); //Padding on the left by 50px
-        table.padTop(20);
-        table.padRight(20);
-        table.padBottom(20);
+
 
         stage.addActor(table);
 
@@ -93,25 +90,44 @@ public class MenuScreen implements Screen {
         playerList = new List(menuSkin);
         playerListPane = new ScrollPane(playerList);
         playerListPane.setStyle(paneStyle);
+        playerListPane.setScrollingDisabled(true,false);
 
         challengeList = new List(menuSkin);
         challengePane = new ScrollPane(challengeList);
         challengePane.setStyle(paneStyle);
-
+        challengePane.setScrollingDisabled(true,false);
         Label challengeLabel = new Label("Challenges",menuSkin);
         Label playerLabel = new Label("Players online",menuSkin);
 
-
+        //table.setDebug(true);
         /* Actually arranging our layout */
-        table.add(playerLabel).align(Align.left);
-        table.add(challengeLabel).align(Align.right);
+        table.pad(10);
+        table.add(playerLabel)
+                .align(Align.left)
+                .padLeft(10).padTop(10);
+        table.add(challengeLabel)
+                .align(Align.right)
+                .padRight(10).padTop(10);
         table.row();
-        table.add(playerListPane).expandX().align(Align.topLeft).padRight(5);
-        table.add(challengePane).expandX().align(Align.topRight).padLeft(5);
+        table.add(playerListPane)
+                .expandX()
+                .expandY()
+                .align(Align.topLeft)
+                .padLeft(10).padTop(10);
+        table.add(challengePane)
+                .expandX()
+                .expandY()
+                .align(Align.topRight)
+                .padRight(10).padTop(10);
 
         /* Setting up our chat box! */
-        table.row().padTop(10).expandY();
-        table.add(chess.chatBox).align(Align.bottomLeft).expandX().expandY().padBottom(10).prefWidth(Gdx.graphics.getWidth()).width(Gdx.graphics.getWidth());
+        table.row().padTop(10).expandY().minHeight(10); //This is to prevent any overlap hopefully!
+        table.add(chess.chatBox).align(Align.bottomLeft)
+                .expandX().expandY()
+                .padBottom(5).padLeft(10).padRight(10).padTop(10)
+                .prefWidth(Gdx.graphics.getWidth()).width(Gdx.graphics.getWidth())
+                .prefHeight(200)
+                .maxHeight(200);
 
 
         /* Setting up listeners for our different panes */
@@ -199,7 +215,6 @@ public class MenuScreen implements Screen {
 
     public void updateChallenges()
     {
-        System.out.println("Updating challenges!");
         synchronized (chess.challenges)
         {
             Array<ChallengeLabel> challengeArray = new Array<ChallengeLabel>();
@@ -226,7 +241,6 @@ public class MenuScreen implements Screen {
             {
                 //Let's actually check if the player ISN'T us xD
                 if(player.id!=chess.userID) {
-                    System.out.println("Adding: " +player.name);
                     labels.add(new PlayerLabel(player));
                 }
                 //TODO maybe add a listener to the label? Unless there is one built in.
