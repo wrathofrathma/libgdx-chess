@@ -43,12 +43,16 @@ public class LoginScreen implements Screen {
 
         final TextField userTextField = new TextField("",skin);
         final TextField passwordTextField = new TextField("",skin);
-        passwordTextField.setMessageText("Disabled!");
         final TextField serverTextField = new TextField("",skin);
 
+        /* Setting up our text fields */
+        passwordTextField.setMessageText("Disabled!");
         passwordTextField.setPasswordMode(true);
         passwordTextField.setPasswordCharacter('*');
         passwordTextField.setDisabled(true);
+
+
+        serverTextField.setText("Chess Network");
 
         TextButton connectButton = new TextButton("Connect!", skin);
 
@@ -59,11 +63,21 @@ public class LoginScreen implements Screen {
                 try {
                     if(!chess.network.isConnected())
                     {
-                        chess.network.connect(5000,serverTextField.getText(),7667);
-                        if(chess.network.isConnected()) {
-                            serverTextField.setDisabled(true);
-                            chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                        if(serverTextField.getText().equals("Chess Network")) {
+                            chess.network.connect(5000, "2601:145:c300:4910:9232:47cc:a8bd:c810", 7667);
+                            if (chess.network.isConnected()) {
+                                serverTextField.setDisabled(true);
+                                chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                            }
                         }
+                        else {
+                            chess.network.connect(5000, serverTextField.getText(), 7667);
+                            if (chess.network.isConnected()) {
+                                serverTextField.setDisabled(true);
+                                chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                            }
+                        }
+
                     }
                     else {
                         chess.network.sendTCP(new IdentPacket(userTextField.getText()));
