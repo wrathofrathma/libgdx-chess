@@ -4,11 +4,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.chess.rathma.Chess;
@@ -88,9 +86,72 @@ public class LoginScreen implements Screen {
                 }
             }
         });
+        serverTextField.setTextFieldListener(new TextField.TextFieldListener() {
+            @Override
+            public void keyTyped(TextField textField, char c) {
+                if((c== '\n' || c=='\r') && !textField.getText().equals("")) {
+                    try {
+                        if(!chess.network.isConnected())
+                        {
+                            if(serverTextField.getText().equals("Chess Network")) {
+                                chess.network.connect(5000, "2601:145:c300:4910:9232:47cc:a8bd:c810", 7667);
+                                if (chess.network.isConnected()) {
+                                    serverTextField.setDisabled(true);
+                                    chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                                }
+                            }
+                            else {
+                                chess.network.connect(5000, serverTextField.getText(), 7667);
+                                if (chess.network.isConnected()) {
+                                    serverTextField.setDisabled(true);
+                                    chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                                }
+                            }
 
+                        }
+                        else {
+                            chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                        }
+                    } catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        userTextField.setTextFieldListener(new TextField.TextFieldListener() {
+            @Override
+            public void keyTyped(TextField textField, char c) {
+                if((c== '\n' || c=='\r') && !textField.getText().equals("")) {
+                    try {
+                        if(!chess.network.isConnected())
+                        {
+                            if(serverTextField.getText().equals("Chess Network")) {
+                                chess.network.connect(5000, "2601:145:c300:4910:9232:47cc:a8bd:c810", 7667);
+                                if (chess.network.isConnected()) {
+                                    serverTextField.setDisabled(true);
+                                    chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                                }
+                            }
+                            else {
+                                chess.network.connect(5000, serverTextField.getText(), 7667);
+                                if (chess.network.isConnected()) {
+                                    serverTextField.setDisabled(true);
+                                    chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                                }
+                            }
 
-
+                        }
+                        else {
+                            chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                        }
+                    } catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
 
 
         stage.addActor(table);
