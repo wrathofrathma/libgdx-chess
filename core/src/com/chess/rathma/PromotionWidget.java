@@ -24,9 +24,7 @@ public class PromotionWidget extends WidgetGroup{
     * Pieces, or Texture of pieces will be added to the vGroup with listeners.
     *
     * */
-    private String pieceTexturePath = "chesspieces2.png";
     private Sprite blanket;
-    private String blanketPath = "promotionblanket.png";
     private TextureRegion[][] regions; //Our piece regions.
     public VerticalGroup vGroup;
 
@@ -41,18 +39,13 @@ public class PromotionWidget extends WidgetGroup{
 
 
         /* Setting a background */
-        blanket = new Sprite(new Texture(Gdx.files.internal(blanketPath)));
+        blanket = new Sprite(chessBoard.atlas.findRegion("translucentboard"));
         //setBackground(new SpriteDrawable(blanket));
         blanket.setBounds(0,0,chessBoard.getWidth(),chessBoard.getHeight());
 
         /* Setting up our vGroup */
         vGroup = new VerticalGroup();
         vGroup.space(1);
-
-
-        /* Grabbing our textures */
-        Texture pieceTexture = new Texture(Gdx.files.internal(pieceTexturePath));
-        regions = TextureRegion.split(pieceTexture, 64,64);
 
         /* Flags */
         setTouchable(Touchable.enabled);
@@ -73,10 +66,10 @@ public class PromotionWidget extends WidgetGroup{
         {
             System.out.println("Spawning black promo pieces");
             //Add 4 black pieces to vGroup
-            queen = new Piece(Piece.Colour.BLACK, Piece.Type.QUEEN,pawnX,7,regions[0][1],gameRoom,chessBoard,true);
-            rook = new Piece(Piece.Colour.BLACK, Piece.Type.ROOK,pawnX,6,regions[0][2],gameRoom,chessBoard,true);
-            knight = new Piece(Piece.Colour.BLACK, Piece.Type.KNIGHT,pawnX,5,regions[0][3],gameRoom,chessBoard,true);
-            bishop = new Piece(Piece.Colour.BLACK, Piece.Type.BISHOP,pawnX,4,regions[0][4],gameRoom,chessBoard,true);
+            queen = new Piece(Piece.Colour.BLACK, Piece.Type.QUEEN,pawnX,7,chessBoard.atlas.findRegion("bq"),gameRoom,chessBoard,true);
+            rook = new Piece(Piece.Colour.BLACK, Piece.Type.ROOK,pawnX,6,chessBoard.atlas.findRegion("br"),gameRoom,chessBoard,true);
+            knight = new Piece(Piece.Colour.BLACK, Piece.Type.KNIGHT,pawnX,5,chessBoard.atlas.findRegion("bn"),gameRoom,chessBoard,true);
+            bishop = new Piece(Piece.Colour.BLACK, Piece.Type.BISHOP,pawnX,4,chessBoard.atlas.findRegion("bb"),gameRoom,chessBoard,true);
             queen.addListener(new PromotionListener(pawnX){
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
@@ -122,10 +115,10 @@ public class PromotionWidget extends WidgetGroup{
         {
             System.out.println("Spawning white promo pieces");
             //Add 4 white pieces to vgroup
-            queen = new Piece(Piece.Colour.WHITE, Piece.Type.QUEEN,pawnX,7,regions[1][1],gameRoom,chessBoard,true);
-            rook = new Piece(Piece.Colour.WHITE, Piece.Type.ROOK,pawnX,6,regions[1][2],gameRoom,chessBoard,true);
-            knight = new Piece(Piece.Colour.WHITE, Piece.Type.KNIGHT,pawnX,5,regions[1][3],gameRoom,chessBoard,true);
-            bishop = new Piece(Piece.Colour.WHITE, Piece.Type.BISHOP,pawnX,4,regions[1][4],gameRoom,chessBoard,true);
+            queen = new Piece(Piece.Colour.WHITE, Piece.Type.QUEEN,pawnX,7,chessBoard.atlas.findRegion("wq"),gameRoom,chessBoard,true);
+            rook = new Piece(Piece.Colour.WHITE, Piece.Type.ROOK,pawnX,6,chessBoard.atlas.findRegion("wr"),gameRoom,chessBoard,true);
+            knight = new Piece(Piece.Colour.WHITE, Piece.Type.KNIGHT,pawnX,5,chessBoard.atlas.findRegion("wn"),gameRoom,chessBoard,true);
+            bishop = new Piece(Piece.Colour.WHITE, Piece.Type.BISHOP,pawnX,4,chessBoard.atlas.findRegion("wb"),gameRoom,chessBoard,true);
 
             queen.addListener(new PromotionListener(pawnX){
                 @Override

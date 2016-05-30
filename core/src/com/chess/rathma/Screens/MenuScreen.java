@@ -47,12 +47,10 @@ public class MenuScreen implements Screen {
     public BitmapFont font; //What the fuck is your purpose actually?
     Skin menuSkin;
 
-    String backgroundString="menuBackground.png";
-    String paneBackground= "menuBackground.png";
-
     public MenuScreen(final Chess chess)
     {
         this.chess = chess;
+        Gdx.graphics.setWindowedMode(600,800);
         /* Initialising components */
         stage = new Stage();
 
@@ -67,13 +65,13 @@ public class MenuScreen implements Screen {
 
 
         //TODO Stuff subject to move to show()
-        menuSkin = new Skin(Gdx.files.internal("style.json"));
+        menuSkin = new Skin(Gdx.files.internal("menu.json"));
         font = menuSkin.getFont("default-font");
 
 
         /* Setting up our display */
         table = new Table();
-        table.setBackground(new SpriteDrawable(new Sprite(new Texture(Gdx.files.internal(backgroundString)))));
+        table.setBackground(new SpriteDrawable(new Sprite(menuSkin.getRegion("background"))));
         table.setFillParent(true);
         table.align(Align.topLeft); //Why the fuck would someone draw from the bottom of the screen?
 
@@ -104,28 +102,35 @@ public class MenuScreen implements Screen {
         table.pad(10);
         table.add(playerLabel)
                 .align(Align.left)
-                .padLeft(10).padTop(10);
+                .padLeft(60).padTop(10);
         table.add(challengeLabel)
                 .align(Align.right)
-                .padRight(10).padTop(10);
+                .padRight(78).padTop(10);
         table.row();
         table.add(playerListPane)
                 .expandX()
                 .expandY()
                 .align(Align.topLeft)
-                .padLeft(10).padTop(10);
+                .padLeft(10).padTop(10)
+                .prefHeight(360)
+                .prefWidth(240);
         table.add(challengePane)
                 .expandX()
                 .expandY()
                 .align(Align.topRight)
-                .padRight(10).padTop(10);
+                .padRight(10).padTop(10)
+                .prefHeight(360)
+                .prefWidth(240)
+                .minWidth(240)
+                .minHeight(360);
 
         /* Setting up our chat box! */
         table.row().padTop(10).expandY().minHeight(10); //This is to prevent any overlap hopefully!
         table.add(chess.chatBox).align(Align.bottomLeft)
-                .expandX().expandY()
-                .padBottom(5).padLeft(10).padRight(10).padTop(10)
-                .prefWidth(Gdx.graphics.getWidth()).width(Gdx.graphics.getWidth())
+                .expandY()
+                .padBottom(5).padTop(10)
+                .minWidth(560)
+                .prefWidth(Gdx.graphics.getWidth()).width(Gdx.graphics.getWidth()-20)
                 .prefHeight(200)
                 .maxHeight(200);
 
@@ -148,6 +153,13 @@ public class MenuScreen implements Screen {
                 if(getTapCount()>=2)
                 {
                     chess.network.sendTCP(new ChallengeAcceptPacket(((ChallengeLabel)challengeList.getSelected()).challenge.challengeID,chess.userID));
+                    synchronized (chess.challenges) {
+                        for (Challenge challenge : chess.challenges) {
+                            if (challenge.challengeID == ((ChallengeLabel) challengeList.getSelected()).challenge.challengeID) {
+                                chess.challenges.removeValue(challenge,true);
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -232,7 +244,6 @@ public class MenuScreen implements Screen {
     {
         //Synchronised to the playerList so we don't have any thread shenanigans
         synchronized (chess.playerList) {
-//            stage.addActor(new TextLabel("Chess Lobby: " + chess.playerList.size + " players connected", font, 50, 540, playerLabelId));
             //We need this because GDX's List only takes a single array.
             Array<PlayerLabel> labels=new Array<PlayerLabel>();
             PlayerLabel bufferLabel;

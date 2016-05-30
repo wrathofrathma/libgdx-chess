@@ -1,0 +1,110 @@
+
+pieces.png
+size: 1024,1024
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+bb
+  rotate: false
+  xy: 2, 142
+  size: 68, 68
+  orig: 68, 68
+  offset: 0, 0
+  index: -1
+bk
+  rotate: false
+  xy: 548, 688
+  size: 68, 68
+  orig: 68, 68
+  offset: 0, 0
+  index: -1
+bn
+  rotate: false
+  xy: 2, 72
+  size: 68, 68
+  orig: 68, 68
+  offset: 0, 0
+  index: -1
+board
+  rotate: false
+  xy: 2, 212
+  size: 544, 544
+  orig: 544, 544
+  offset: 0, 0
+  index: -1
+bp
+  rotate: false
+  xy: 72, 142
+  size: 68, 68
+  orig: 68, 68
+  offset: 0, 0
+  index: -1
+bq
+  rotate: false
+  xy: 548, 618
+  size: 68, 68
+  orig: 68, 68
+  offset: 0, 0
+  index: -1
+br
+  rotate: false
+  xy: 618, 688
+  size: 68, 68
+  orig: 68, 68
+  offset: 0, 0
+  index: -1
+wb
+  rotate: false
+  xy: 2, 2
+  size: 68, 68
+  orig: 68, 68
+  offset: 0, 0
+  index: -1
+wk
+  rotate: false
+  xy: 72, 72
+  size: 68, 68
+  orig: 68, 68
+  offset: 0, 0
+  index: -1
+wn
+  rotate: false
+  xy: 142, 142
+  size: 68, 68
+  orig: 68, 68
+  offset: 0, 0
+  index: -1
+wp
+  rotate: false
+  xy: 548, 548
+  size: 68, 68
+  orig: 68, 68
+  offset: 0, 0
+  index: -1
+wq
+  rotate: false
+  xy: 618, 618
+  size: 68, 68
+  orig: 68, 68
+  offset: 0, 0
+  index: -1
+wr
+  rotate: false
+  xy: 688, 688
+  size: 68, 68
+  orig: 68, 68
+  offset: 0, 0
+  index: -1
+
+pieces2.png
+size: 1024,1024
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+translucentboard
+  rotate: false
+  xy: 2, 2
+  size: 544, 544
+  orig: 544, 544
+  offset: 0, 0
+  index: -1

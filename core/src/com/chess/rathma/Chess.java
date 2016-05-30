@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.RunnableAction;
 import com.badlogic.gdx.utils.Array;
 import com.chess.rathma.Packets.*;
 import com.chess.rathma.Screens.GameScreen;
+import com.chess.rathma.Screens.LoginScreen;
 import com.chess.rathma.Screens.MenuScreen;
 import com.esotericsoftware.kryonet.Client;
 
@@ -76,18 +77,10 @@ public class Chess extends Game{
         network.getKryo().register(ServerShutdownPacket.class);
         network.getKryo().register(PromotionPacket.class);
         network.getKryo().register(PromotionAccept.class);
-
+        network.getKryo().register(IdentPacket.class);
         network.addListener(new MasterListener(this));
+        setScreen(new LoginScreen(this));
 
-        try {
-            network.connect(5000, addr, portno);
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        menuScreen = new MenuScreen(this);
-        setScreen(menuScreen);
 	}
     public MenuScreen menuScreen;
 

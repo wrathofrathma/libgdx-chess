@@ -1,0 +1,4 @@
+This directory is where all of our base textures will go. 
+Everything here is to be packed with TexturePacker from gdx-tools.jar and then the result placed in the assets folder.
+
+For scalable textures, use android's sdk tool draw9patch and export it here.

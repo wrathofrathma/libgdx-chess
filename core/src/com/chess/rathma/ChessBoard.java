@@ -4,15 +4,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.scenes.scene2d.ui.Container;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.Widget;
-import com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.SpriteDrawable;
 import com.badlogic.gdx.utils.Align;
@@ -55,35 +53,19 @@ public class ChessBoard extends Container {
     //Shouldn't board ID be stored here?
     //Definitely should be stored here
 
-    /* Piece Textures */
-    public TextureRegion[][] regions; //We will pass this in from another class, if it's not passed we will gen our own.
-    /* Piece ID numbers - Only relevant for texture region
-     * 0 WPawn
-     * 1 WBishop
-     * 2 WKnight
-     * 3 WRook
-     * 4 WQueen
-     * 5 WKing
-     * 6 BPawn
-     * 7 BBishop
-     * 8 BKnight
-     * 9 BRook
-     * 10 BQueen
-     * 11 BKing
-     */
+    /* We've moved to TextureAtlas because it allows us to more easily generate new textures. This is much more modular */
+    /* Public so our promotion widget can access this without passing an unnecessary argument */
+    public TextureAtlas atlas;
+
     /* Board texture stuff */
     public Sprite texture; //Will house the board texture
-    public String boardTexture = "defaultboard600.png";
-    //public String boardTexture = "defaultboard544.png";
 
     public int boardID; //Might need this in the future for differentiating boards.
     public int promotionLock=-1; //As long as this isn't between 0-7 it isn't locked.
-    public ChessBoard(TextureRegion[][] regions, GameRoom gameRoom)
+    public ChessBoard(GameRoom gameRoom)
     {
-
-        this.regions = regions;
         this.gameRoom = gameRoom;
-
+        atlas = new TextureAtlas(Gdx.files.internal("pieces.atlas"));
         loadBoard();
     }
 
@@ -100,7 +82,7 @@ public class ChessBoard extends Container {
     {
         /* Set up our background of each board. */
         this.align(Align.bottomLeft);
-        texture = new Sprite(new Texture(Gdx.files.internal(boardTexture)));
+        texture = new Sprite(atlas.findRegion("board"));
         this.setBackground(new SpriteDrawable(texture));
         pieces = new WidgetGroup();
         /* This sets our container's X & Y to be relative to it's location & pieces to do the same thing */
@@ -141,15 +123,6 @@ public class ChessBoard extends Container {
     }
 
 
-    public void loadBoard(String _boardTexture)
-    {
-        boardTexture = _boardTexture;
-        if(texture!=null)
-            texture.getTexture().dispose();
-        loadBoard();
-
-    }
-
     public Piece getPiece(int x, int y)
     {
         Piece p;
@@ -172,28 +145,28 @@ public class ChessBoard extends Container {
     {
         switch(gameRoom.board[x][y]) {
             case 1:
-                getPiece(x, y).texture = new Sprite(regions[0][1]);
+                getPiece(x, y).texture = new Sprite(atlas.findRegion("bq"));
                 break;
             case 2:
-                getPiece(x, y).texture = new Sprite(regions[0][2]);
+                getPiece(x, y).texture = new Sprite(atlas.findRegion("br"));
                 break;
             case 3:
-                getPiece(x, y).texture = new Sprite(regions[0][3]);
+                getPiece(x, y).texture = new Sprite(atlas.findRegion("bn"));
                 break;
             case 4:
-                getPiece(x, y).texture = new Sprite(regions[0][4]);
+                getPiece(x, y).texture = new Sprite(atlas.findRegion("bb"));
                 break;
             case 7:
-                getPiece(x, y).texture = new Sprite(regions[1][1]);
+                getPiece(x, y).texture = new Sprite(atlas.findRegion("wq"));
                 break;
             case 8:
-                getPiece(x, y).texture = new Sprite(regions[1][2]);
+                getPiece(x, y).texture = new Sprite(atlas.findRegion("wr"));
                 break;
             case 9:
-                getPiece(x, y).texture = new Sprite(regions[1][3]);
+                getPiece(x, y).texture = new Sprite(atlas.findRegion("wn"));
                 break;
             case 10:
-                getPiece(x, y).texture = new Sprite(regions[1][4]);
+                getPiece(x, y).texture = new Sprite(atlas.findRegion("wb"));
                 break;
         }
     }
@@ -218,40 +191,40 @@ public class ChessBoard extends Container {
                         if (gameRoom.board[i][j] >= 0 && gameRoom.board[i][j] <= 11) {
                             switch (gameRoom.board[i][j]) {
                                 case 0:
-                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.KING, i, j, regions[0][0], gameRoom, this, false));
+                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.KING, i, j, atlas.findRegion("bk"), gameRoom, this, false));
                                     break;
                                 case 1:
-                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.QUEEN, i, j, regions[0][1], gameRoom, this, false));
+                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.QUEEN, i, j, atlas.findRegion("bq"), gameRoom, this, false));
                                     break;
                                 case 2:
-                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.ROOK, i, j, regions[0][2], gameRoom, this, false));
+                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.ROOK, i, j, atlas.findRegion("br"), gameRoom, this, false));
                                     break;
                                 case 3:
-                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.KNIGHT, i, j, regions[0][3], gameRoom, this, false));
+                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.KNIGHT, i, j, atlas.findRegion("bn"), gameRoom, this, false));
                                     break;
                                 case 4:
-                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.BISHOP, i, j, regions[0][4], gameRoom, this, false));
+                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.BISHOP, i, j, atlas.findRegion("bb"), gameRoom, this, false));
                                     break;
                                 case 5:
-                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.PAWN, i, j, regions[0][5], gameRoom, this, false));
+                                    pieces.addActor(new Piece(Piece.Colour.BLACK, Piece.Type.PAWN, i, j, atlas.findRegion("bp"), gameRoom, this, false));
                                     break;
                                 case 6:
-                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.KING, i, j, regions[1][0], gameRoom, this, false));
+                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.KING, i, j, atlas.findRegion("wk"), gameRoom, this, false));
                                     break;
                                 case 7:
-                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.QUEEN, i, j, regions[1][1], gameRoom, this, false));
+                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.QUEEN, i, j, atlas.findRegion("wq"), gameRoom, this, false));
                                     break;
                                 case 8:
-                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.ROOK, i, j, regions[1][2], gameRoom, this, false));
+                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.ROOK, i, j, atlas.findRegion("wr"), gameRoom, this, false));
                                     break;
                                 case 9:
-                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.KNIGHT, i, j, regions[1][3], gameRoom, this, false));
+                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.KNIGHT, i, j, atlas.findRegion("wn"), gameRoom, this, false));
                                     break;
                                 case 10:
-                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.BISHOP, i, j, regions[1][4], gameRoom, this, false));
+                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.BISHOP, i, j, atlas.findRegion("wb"), gameRoom, this, false));
                                     break;
                                 case 11:
-                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.PAWN, i, j, regions[1][5], gameRoom, this, false));
+                                    pieces.addActor(new Piece(Piece.Colour.WHITE, Piece.Type.PAWN, i, j, atlas.findRegion("wp"), gameRoom, this, false));
                                     break;
 
                             }

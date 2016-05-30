@@ -29,7 +29,7 @@ public class ChatBox extends WidgetGroup{
         this.chess = chess;
         container = new Table();
         chatTable = new Table();
-        chatSkin = new Skin(Gdx.files.internal("chatStyle.json"));
+        chatSkin = new Skin(Gdx.files.internal("chat.json"));
         scrollPane = new ScrollPane(chatTable);
 
         /* We want to disable scrolling along X since we're going to figure out this word wrapping */
@@ -49,7 +49,8 @@ public class ChatBox extends WidgetGroup{
                 }
             }
         });
-
+        /* Let's get a background */
+        container.setBackground(chatSkin.getDrawable("default-round-large"));
         /* Organising everything */
         addActor(container);
         container.setFillParent(true);
@@ -60,7 +61,6 @@ public class ChatBox extends WidgetGroup{
                 .minWidth(560)
                 .maxHeight(250)
                 .maxWidth(1200) //This is mostly for if we decide to expand during bughouse.
-                .prefWidth(560)
                 .align(Align.bottomLeft)
                 .prefHeight(200);
         container.row().expandX();
@@ -68,7 +68,7 @@ public class ChatBox extends WidgetGroup{
                 .expandX()
                 .align(Align.bottomLeft)
                 .minWidth(560)
-                .prefWidth(560);
+                .prefWidth(this.getPrefWidth());
 
         /* Setting up our chatTable */
         chatTable.setWidth(scrollPane.getPrefWidth());

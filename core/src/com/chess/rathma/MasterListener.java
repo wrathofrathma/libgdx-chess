@@ -7,6 +7,7 @@ import com.chess.rathma.Packets.*;
 
 
 import com.chess.rathma.Screens.GameScreen;
+import com.chess.rathma.Screens.LoginScreen;
 import com.chess.rathma.Screens.MenuScreen;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
@@ -28,6 +29,18 @@ public class MasterListener extends Listener{
             MessagePacket mp = (MessagePacket) object;
             //TODO change this logic to deal with structural changes to Chess where the chatbox is located.
             chess.chatBox.addMessage(mp);
+        }
+        else if(object instanceof IdentPacket)
+        {
+            IdentPacket packet = (IdentPacket) object;
+            if(packet.acceptBit ==true )
+            {
+                if(chess.getScreen() instanceof LoginScreen)
+                {
+                    ((LoginScreen)chess.getScreen()).lock=false;
+                }
+            }
+
         }
         else if(object instanceof String)
         {
@@ -137,6 +150,7 @@ public class MasterListener extends Listener{
             CreateGamePacket packet = (CreateGamePacket)object;
             synchronized (chess.gameRooms) {
                 chess.gameRooms.add(new GameRoom(packet.gameID, packet.p1, packet.p2, chess, packet.white));
+
             }
         }
     }

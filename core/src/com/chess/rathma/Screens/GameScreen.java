@@ -48,15 +48,8 @@ public class GameScreen implements Screen{
     public ChessBoard board;
 
 
-    /* Texture stuff */
-    private Texture pieceTexture;
-    private TextureRegion[][] regions;
-    private String pieceTexturePath = "chesspieces2.png";
-
-
-
     public Skin gameSkin;
-    private String gameSkinString = "style.json";
+    private String gameSkinString = "game.json";
 
     public BitmapFont endLabelFont;
 
@@ -87,8 +80,6 @@ public class GameScreen implements Screen{
         /* Initialising our media objects & Textures */
         moveSound = Gdx.audio.newSound(Gdx.files.internal("move.mp3"));
         endLabelFont = gameSkin.getFont("default-font") ;
-        pieceTexture = new Texture(Gdx.files.internal(pieceTexturePath));
-        regions = TextureRegion.split(pieceTexture, 64,64);
 
         /* Setting up the active game */
         activeGameID = -1;
@@ -103,21 +94,20 @@ public class GameScreen implements Screen{
         //table.setDebug(true);
 
         /* Setting up our UI */
-        //TODO find a better way to change the window size
-        //Gdx.graphics.setWindowedMode(600,800); //I HATE that this method reinitialises the window.
-        //stage.getViewport().update(Gdx.graphics.getWidth(),Gdx.graphics.getHeight(),true);
+        table.setBackground(gameSkin.getDrawable("background"));
         table.setFillParent(true);
         table.align(Align.topLeft);
         stage.addActor(table);
         table.add(board)
-                .maxHeight(600).maxWidth(600);
+                .maxHeight(544).maxWidth(544).padTop(28);
         table.row();
         table.add(chess.chatBox).align(Align.bottomLeft)
                 .expandX().expandY()
-                .padBottom(5).padLeft(20).padRight(20).padTop(10)
-                .prefWidth(Gdx.graphics.getWidth()).width(Gdx.graphics.getWidth())
+                .padBottom(5).padTop(10).padLeft(10)
+                .prefWidth(Gdx.graphics.getWidth()).width(Gdx.graphics.getWidth()-20)
                 .prefHeight(200)
                 .maxHeight(200);
+
     }
 
     public void loadGame(int gameID)
@@ -161,7 +151,7 @@ public class GameScreen implements Screen{
             }
         }
 
-        board = new ChessBoard(regions,this.gameRoom);
+        board = new ChessBoard(this.gameRoom);
         chess.network.sendTCP(new BoardPosition(activeGameID,true)); //Requesting the starting board position.
     }
 
@@ -281,20 +271,6 @@ public class GameScreen implements Screen{
         }
         if(gameRoom.state == GameRoom.GameState.DESTROY) {
             destroyGame();
-        }
-        /* Just some testing */
-        if(Gdx.input.isKeyPressed(Input.Keys.R))
-        {
-            boolean exists=false;
-            synchronized (board.pieces) {
-                for (Actor actor : board.pieces.getChildren()) {
-                    if(actor instanceof PromotionWidget)
-                        exists=true;
-
-                }
-            }
-            if(!exists)
-                board.promotionDialog(7);
         }
 
         stage.act();
