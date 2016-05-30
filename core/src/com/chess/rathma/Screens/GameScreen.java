@@ -46,7 +46,7 @@ public class GameScreen implements Screen{
     private GameListener gameListener;
     public GameRoom gameRoom;
     public ChessBoard board;
-
+    public Sidebar sidebar;
 
     public Skin gameSkin;
     private String gameSkinString = "game.json";
@@ -59,7 +59,7 @@ public class GameScreen implements Screen{
         this.chess = chess;
 
     }
-
+    public boolean menuSwitch=false;
 
     public void boardUpdated()
     {
@@ -72,10 +72,10 @@ public class GameScreen implements Screen{
     @Override
     public void show() {
         /* Initialising most of our UI stuff */
+        Gdx.graphics.setWindowedMode(800,800); //To compensate for adding a sidebar.
         gameSkin = new Skin(Gdx.files.internal(gameSkinString));
         stage = new Stage(new ScreenViewport());
         table = new Table();
-
 
         /* Initialising our media objects & Textures */
         moveSound = Gdx.audio.newSound(Gdx.files.internal("move.mp3"));
@@ -86,6 +86,7 @@ public class GameScreen implements Screen{
         gameListener = new GameListener(this);
         chess.network.addListener(gameListener);
         loadGame(-1);
+        sidebar = new Sidebar(gameRoom,gameSkin);
 
         /* Our input processor stuff */
         Gdx.input.setInputProcessor(stage);
@@ -100,11 +101,16 @@ public class GameScreen implements Screen{
         stage.addActor(table);
         table.add(board)
                 .maxHeight(544).maxWidth(544).padTop(28);
+        table.add(sidebar)
+                .minWidth(200).minHeight(300)
+                .padTop(28).padRight(10);
+
         table.row();
         table.add(chess.chatBox).align(Align.bottomLeft)
                 .expandX().expandY()
                 .padBottom(5).padTop(10).padLeft(10)
-                .prefWidth(Gdx.graphics.getWidth()).width(Gdx.graphics.getWidth()-20)
+                //.prefWidth(Gdx.graphics.getWidth()).width(Gdx.graphics.getWidth()-20)
+                .prefWidth(580)
                 .prefHeight(200)
                 .maxHeight(200);
 
@@ -164,41 +170,7 @@ public class GameScreen implements Screen{
         {
             actor.clearListeners();
         }
-        GlyphLayout glyphLayout = new GlyphLayout(endLabelFont,gameRoom.gameEnd.condition);
-        stage.addListener(new ClickListener()
-        {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                super.clicked(event, x, y);
-                Array<Actor> actors = stage.getActors();
-                for(int i=0; i<actors.size;i++)
-                {
-                    if(actors.get(i) instanceof TextLabel)
-                    {
-                        TextLabel label = (TextLabel)actors.get(i);
-                        if(x>=label.getX() && x<=label.getX()+label.getWidth())
-                        {
-                            //For some reason, unlike every other object, the location of text objects is the top left rather than bottom left.
-                            if(y<=label.getY() && y>=label.getY()-label.getHeight())
-                            {
-                                System.out.println("Clicked label: " + label.text);
-                                label.clicked(chess);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        stage.addActor(new TextLabel(gameRoom.gameEnd.condition,endLabelFont,(Gdx.graphics.getWidth()/2)-(glyphLayout.width/2), (Gdx.graphics.getHeight()/2)-(glyphLayout.height/2),3)
-        {
-            @Override
-            public void clicked(Chess chess) {
-                super.clicked(chess);
-                gameRoom.state= GameRoom.GameState.DESTROY;
-            }
-        });
-
+        sidebar.gameEnd(gameRoom.gameEnd.condition);
     }
 
     /* Only called on server shutdown */
@@ -272,6 +244,12 @@ public class GameScreen implements Screen{
         if(gameRoom.state == GameRoom.GameState.DESTROY) {
             destroyGame();
         }
+        /* This is for later when we can freely switch between screens
+        if(menuSwitch==true)
+        {
+            //this.hide();
+            chess.setScreen(new MenuScreen(chess));
+        }*/
 
         stage.act();
 

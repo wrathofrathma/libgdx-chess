@@ -59,6 +59,7 @@ public class GameListener extends Listener{
             Piece piece = screen.gameRoom.getPiece(packet.x1,packet.y1);
             if(piece.pieceID!=-1) {
                 screen.gameRoom.Move(piece, packet.x2, packet.y2,screen.board.pieces.getChildren());
+                screen.sidebar.addMove(packet);
                 screen.boardUpdated();
             }
             else

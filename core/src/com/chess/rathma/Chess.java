@@ -78,6 +78,7 @@ public class Chess extends Game{
         network.getKryo().register(PromotionPacket.class);
         network.getKryo().register(PromotionAccept.class);
         network.getKryo().register(IdentPacket.class);
+        network.getKryo().register(SurrenderPacket.class);
         network.addListener(new MasterListener(this));
         setScreen(new LoginScreen(this));
 
