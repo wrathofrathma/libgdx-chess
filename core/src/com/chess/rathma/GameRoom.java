@@ -71,7 +71,6 @@ public class GameRoom {
      //   System.out.println(packet.winnerUsername + " wins on condition: " + packet.condition);
         state = GameState.ENDFLAG;
         gameEnd = packet;
-
     }
 
     /* Absolute command from the server */
@@ -115,24 +114,24 @@ public class GameRoom {
      * Probably need another function or packet for adding/modifying a piece value from the server(pawn promotion or bughouse/crazyhouse chess dropping pieces)
       * */
     /* Expected input: Piece's old X & Y, new coordinates */
-    public void Move(Piece piece, int newx, int newy, Array<Actor> actors,MovePacket movePacket)
+    public void Move(Piece piece, MovePacket movePacket, Array<Actor> actors)
     {
-        board[newx][newy]=board[piece.locx][piece.locy];
+        board[movePacket.x2][movePacket.y2]=board[piece.locx][piece.locy];
         /* Absolute position */
         for(Actor actor : actors)
         {
             if(actor instanceof Piece)
             {
                 Piece p = (Piece)actor;
-                if(p.locx==newx && p.locy == newy)
+                if(p.locx==movePacket.x2 && p.locy == movePacket.y2)
                 {
                     //Remove piece from stage.
                     p.remove();
                 }
             }
         }
-        piece.locx = newx;
-        piece.locy = newy;
+        piece.locx = movePacket.x2;
+        piece.locy = movePacket.y2;
         /* Board position */
         if(piece.gameRoom.colour==COLOUR.BLACK)
             piece.setY(piece.grabBlackY());

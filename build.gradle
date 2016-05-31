@@ -14,7 +14,7 @@ allprojects {
     apply plugin: "eclipse"
     apply plugin: "idea"
 
-    version = '1.05'
+    version = '1.07'
     ext {
         appName = "libgdx-chess"
         gdxVersion = '1.9.3'

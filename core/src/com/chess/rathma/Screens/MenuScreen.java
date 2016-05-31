@@ -27,7 +27,6 @@ import com.chess.rathma.Packets.ChallengeAcceptPacket;
 import com.chess.rathma.Packets.ChallengePacket;
 import com.chess.rathma.Packets.CreateGamePacket;
 import com.chess.rathma.Packets.RequestPacket;
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 
 
 public class MenuScreen implements Screen {

@@ -43,7 +43,6 @@ public class GameScreen implements Screen{
 
     /* Active game objects */
     public int activeGameID=-1;
-    private GameListener gameListener;
     public GameRoom gameRoom;
     public ChessBoard board;
     public Sidebar sidebar;
@@ -82,9 +81,6 @@ public class GameScreen implements Screen{
         endLabelFont = gameSkin.getFont("default-font") ;
 
         /* Setting up the active game */
-        gameListener = new GameListener(this);
-        chess.network.addListener(gameListener);
-
 
         loadGame(activeGameID);
         /* Depends on game being loaded */
@@ -119,7 +115,6 @@ public class GameScreen implements Screen{
     }
     @Override
     public void hide() {
-        chess.network.removeListener(gameListener);
         for(Actor actor : stage.getActors())
         {
             actor.clearListeners();
@@ -181,14 +176,11 @@ public class GameScreen implements Screen{
     /* Later on might want to send the game ID */
     public void endGame()
     {
-        chess.network.removeListener(gameListener);
-
         sidebar.gameEnd(gameRoom.gameEnd.condition);
     }
 
     /* Only called on server shutdown */
     public void shutdown(String message){
-        chess.network.removeListener(gameListener);
         synchronized (stage.getActors()) {
             for (Actor actor : stage.getActors()) {
                 actor.clearListeners();
@@ -291,7 +283,6 @@ public class GameScreen implements Screen{
 
     @Override
     public void dispose() {
-        chess.network.removeListener(gameListener);
         stage.dispose();
         for(GameRoom room : chess.gameRooms)
         {

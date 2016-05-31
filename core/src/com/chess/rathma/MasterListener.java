@@ -154,7 +154,115 @@ public class MasterListener extends Listener{
                     chess.menuScreen.gameAcceptFlag=true;
             }
         }
+
+        /* *************************************************************************/
+        /* We have to handle this here since we need access to the specific screen to trigger events - Fuck polling*/
+        if(object instanceof BoardPosition)
+        {
+            BoardPosition packet = (BoardPosition)object;
+            //First we can check if the activeGameID fits, if not we search for it in the array. We can separate the triggering of events this way.
+            for(GameRoom room : chess.gameRooms) {
+                if(room.gameID==packet.gameID) {
+                    room.board=packet.board;
+                }
+            }
+            if(chess.getScreen() instanceof GameScreen) {
+                if(packet.gameID == ((GameScreen)chess.getScreen()).activeGameID) {
+                    ((GameScreen)chess.getScreen()).board.spawnPieces();
+                }
+            }
+        }
+        else if(object instanceof MovePacket) {
+            MovePacket packet = (MovePacket) object;
+            /* Server commands are absolute! */
+            synchronized (chess.gameRooms) {
+                if (chess.getScreen() instanceof GameScreen) {
+                    GameScreen screen = (GameScreen) chess.getScreen();
+                    /* If it's the active screen, we need to move the sprite */
+                    if (screen.activeGameID == packet.gameID) {
+                        Piece piece = screen.gameRoom.getPiece(packet.x1, packet.y1);
+                        if (piece != null) {
+                            screen.gameRoom.Move(piece, packet, screen.board.pieces.getChildren());
+                            screen.sidebar.addMove(packet);
+                            screen.boardUpdated();
+                        } else
+                            System.err.println("Couldn't find the piece");
+                    } else { //ActiveGameID is not the packet ID.
+                        for (GameRoom room : chess.gameRooms) {
+                            if (room.gameID == packet.gameID) {
+                                room.Move(packet);
+                            }
+                        }
+                    }
+                } else { //Active screen is the menu
+                    for (GameRoom room : chess.gameRooms) {
+                        if (room.gameID == packet.gameID) {
+                            room.Move(packet);
+                        }
+                    }
+                }
+            }
+        }
+        else if(object instanceof GameEndPacket)
+        {
+            System.out.println("GameEndPacket!");
+            GameEndPacket packet = (GameEndPacket)object;
+            if(packet.endbit)
+            {
+                /* Find game & end*/
+                for(GameRoom room : chess.gameRooms)
+                {
+                    if(room.gameID==packet.gameID)
+                    {
+                        room.endGame(packet);
+                    }
+                }
+            }
+        }
+        else if(object instanceof PromotionAccept)
+        {
+            PromotionAccept packet = (PromotionAccept) object;
+            if(chess.getScreen() instanceof GameScreen) {
+                GameScreen screen = (GameScreen)chess.getScreen();
+                if(packet.gameID==screen.activeGameID) {
+                    screen.board.releasePromotion();
+                    screen.gameRoom.changeID(packet.pieceX,packet.pieceY,packet.newID);
+                    screen.board.promotionUpdate(packet.pieceX,packet.pieceY);
+                }
+                else { //Game ID isn't active game ID. But user is in game.
+                    synchronized (chess.gameRooms) {
+                        for(GameRoom room : chess.gameRooms) {
+                            if(room.gameID==packet.gameID) {
+                                room.changeID(packet.pieceX,packet.pieceY,packet.newID);
+                            }
+                        }
+                    }
+                }
+            }
+            else { //Player is in the menu
+                synchronized (chess.gameRooms) {
+                    for(GameRoom room : chess.gameRooms) {
+                        if(room.gameID==packet.gameID) {
+                            room.changeID(packet.pieceX,packet.pieceY,packet.newID);
+                        }
+                    }
+                }
+            }
+        }
+        else if(object instanceof PromotionPacket)
+        {
+            PromotionPacket packet = (PromotionPacket)object;
+            if(chess.getScreen() instanceof GameScreen)
+            {
+                GameScreen screen = (GameScreen)chess.getScreen();
+                if(screen.board.gameRoom.gameID==packet.gameID)
+                {
+                    screen.board.promotionLock = packet.pawnx;
+                }
+            }
+        }
     }
+
 
     public void disconnected(Connection connection)
     {
