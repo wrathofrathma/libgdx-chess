@@ -1,7 +1,6 @@
 package com.chess.rathma;
 
 
-import com.chess.rathma.Screens.GameListener;
 
 /**
  * Created by rathma on 5/30/16.
