@@ -25,6 +25,7 @@ public class GameRoom {
     public int p1, p2; //Player IDs
     public String player1, player2; //Player usernames, for TextLabel purposes.
     public Chess chess;
+    public Array<MovePacket> moves;
     public GameEndPacket gameEnd;
     public enum COLOUR {
         WHITE,
@@ -38,15 +39,22 @@ public class GameRoom {
     }
     public GameState state;
     public COLOUR colour;
+
+    public String toString(){
+        return "("+gameID+") "+player1 + " vs " + player2;
+    }
+
     public GameRoom()
     {
         board = new int[8][8];
+        moves=new Array<MovePacket>();
     }
     public GameRoom(int gameID, int p1, int p2, Chess chess, boolean colour){
         this.gameID = gameID;
         this.p1 = p1;
         this.p2 = p2;
         this.chess = chess;
+        moves = new Array<MovePacket>();
         if(colour)
         {
             this.colour=COLOUR.WHITE;
@@ -84,19 +92,19 @@ public class GameRoom {
 
     public Piece getPiece(int currentX, int currentY)
     {
-        for(Actor actor : ((GameScreen)chess.getScreen()).board.pieces.getChildren())
-        {
-            if(actor instanceof Piece)
-            {
-                Piece p = (Piece)actor;
+        if(chess.getScreen() instanceof GameScreen) {
+            for (Actor actor : chess.gameScreen.board.pieces.getChildren()) {
+                if (actor instanceof Piece) {
+                    Piece p = (Piece) actor;
              /* Find piece */
-                if(p.locx == currentX && p.locy==currentY) {
-                    return p;
+                    if (p.locx == currentX && p.locy == currentY) {
+                        return p;
+                    }
                 }
             }
+            System.err.println("Piece not found.");
         }
-        System.err.println("Piece not found.");
-        return new Piece(); //Should hopefully never fire.
+        return null; //Should hopefully never fire.
     }
     public void tryPromote(Piece piece)
     {
@@ -107,7 +115,7 @@ public class GameRoom {
      * Probably need another function or packet for adding/modifying a piece value from the server(pawn promotion or bughouse/crazyhouse chess dropping pieces)
       * */
     /* Expected input: Piece's old X & Y, new coordinates */
-    public void Move(Piece piece, int newx, int newy, Array<Actor> actors)
+    public void Move(Piece piece, int newx, int newy, Array<Actor> actors,MovePacket movePacket)
     {
         board[newx][newy]=board[piece.locx][piece.locy];
         /* Absolute position */
@@ -131,7 +139,18 @@ public class GameRoom {
         else
             piece.setY(piece.locy*piece.boardMultiplier);
         piece.setX(piece.locx*piece.boardMultiplier);
+        moves.add(movePacket);
     }
+    public void Move(MovePacket movePacket)
+    {
+        if(movePacket.gameID==gameID) {
+            board[movePacket.x2][movePacket.y2] = board[movePacket.x1][movePacket.y1];
+            board[movePacket.x1][movePacket.y1] = 12;
+        }
+        moves.add(movePacket);
+    }
+
+
 
     /* Piece current and destination locations */
     /* This will be called by the client when we attempt a move */

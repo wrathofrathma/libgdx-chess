@@ -56,14 +56,28 @@ public class GameListener extends Listener{
                 //Toggle turn
             }
             /* Server commands are absolute! */
-            Piece piece = screen.gameRoom.getPiece(packet.x1,packet.y1);
-            if(piece.pieceID!=-1) {
-                screen.gameRoom.Move(piece, packet.x2, packet.y2,screen.board.pieces.getChildren());
-                screen.sidebar.addMove(packet);
-                screen.boardUpdated();
+            synchronized (screen.chess.gameRooms) {
+                if(screen.activeGameID==packet.gameID)
+                {
+                    Piece piece = screen.gameRoom.getPiece(packet.x1, packet.y1);
+                    if (piece.pieceID != -1) {
+                        screen.gameRoom.Move(piece, packet.x2, packet.y2, screen.board.pieces.getChildren(),packet);
+                        if(screen.activeGameID==packet.gameID) {
+                            screen.sidebar.addMove(packet);
+                            screen.boardUpdated();
+                        }
+                    } else
+                        System.err.println("Couldn't find the piece");
+                }
+                else {
+                    for (GameRoom room : screen.chess.gameRooms) {
+                        if (room.gameID == packet.gameID) {
+                            room.Move(packet);
+                        }
+                    }
+                }
             }
-            else
-                System.err.println("Couldn't find the piece");
+
         }
         else if(object instanceof GameEndPacket)
         {

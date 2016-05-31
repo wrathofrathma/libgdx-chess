@@ -42,7 +42,7 @@ public class GameScreen implements Screen{
 
 
     /* Active game objects */
-    public int activeGameID;
+    public int activeGameID=-1;
     private GameListener gameListener;
     public GameRoom gameRoom;
     public ChessBoard board;
@@ -54,10 +54,10 @@ public class GameScreen implements Screen{
     public BitmapFont endLabelFont;
 
     public Sound moveSound;
+
     public GameScreen(final Chess chess)
     {
         this.chess = chess;
-
     }
     public boolean menuSwitch=false;
 
@@ -82,11 +82,13 @@ public class GameScreen implements Screen{
         endLabelFont = gameSkin.getFont("default-font") ;
 
         /* Setting up the active game */
-        activeGameID = -1;
         gameListener = new GameListener(this);
         chess.network.addListener(gameListener);
-        loadGame(-1);
-        sidebar = new Sidebar(gameRoom,gameSkin);
+
+
+        loadGame(activeGameID);
+        /* Depends on game being loaded */
+        sidebar = new Sidebar(this,gameSkin);
 
         /* Our input processor stuff */
         Gdx.input.setInputProcessor(stage);
@@ -115,7 +117,17 @@ public class GameScreen implements Screen{
                 .maxHeight(200);
 
     }
-
+    @Override
+    public void hide() {
+        chess.network.removeListener(gameListener);
+        for(Actor actor : stage.getActors())
+        {
+            actor.clearListeners();
+        }
+        table.clearChildren();
+        table.clear();
+        stage.clear();
+    }
     public void loadGame(int gameID)
     {
 
@@ -123,13 +135,17 @@ public class GameScreen implements Screen{
         synchronized (chess.gameRooms) {
             if (gameID == -1) {
                 this.activeGameID = chess.gameRooms.first().gameID;
-            } else
+            } else if (gameID == activeGameID)
+            {
+                //Do nothing
+            }
+            else
                 this.activeGameID = gameID;
         }
         /* Dispose of all current actors
          * Reinitialise based on the new game data
          */
-        stage.clear();
+        //stage.clear();
 
         //TODO we also need to handle multiple positions being sent.
         /* Grab the game instance of the activeGameID */
@@ -166,10 +182,7 @@ public class GameScreen implements Screen{
     public void endGame()
     {
         chess.network.removeListener(gameListener);
-        for(Actor actor : stage.getActors())
-        {
-            actor.clearListeners();
-        }
+
         sidebar.gameEnd(gameRoom.gameEnd.condition);
     }
 
@@ -231,9 +244,10 @@ public class GameScreen implements Screen{
     @Override
     public void render(float delta) {
         /* Check if there are any valid games in process */
-        if(chess.gameRooms.size<=0) {
-            this.dispose();
-            chess.setScreen(new MenuScreen(chess));
+        if(menuSwitch) {
+            this.hide();
+            chess.setScreen(chess.menuScreen);
+            menuSwitch=false;
         }
         /* Check if current game is completed */
         if(gameRoom.state == GameRoom.GameState.ENDFLAG)
@@ -272,11 +286,6 @@ public class GameScreen implements Screen{
 
     @Override
     public void resume() {
-
-    }
-
-    @Override
-    public void hide() {
 
     }
 

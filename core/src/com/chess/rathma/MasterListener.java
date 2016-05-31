@@ -150,7 +150,8 @@ public class MasterListener extends Listener{
             CreateGamePacket packet = (CreateGamePacket)object;
             synchronized (chess.gameRooms) {
                 chess.gameRooms.add(new GameRoom(packet.gameID, packet.p1, packet.p2, chess, packet.white));
-
+                if(chess.getScreen() instanceof MenuScreen)
+                    chess.menuScreen.gameAcceptFlag=true;
             }
         }
     }

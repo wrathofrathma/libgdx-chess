@@ -206,7 +206,7 @@ public class LoginScreen implements Screen {
         if(chess.network.isConnected() && lock==false)
         {
             this.dispose();
-            chess.setScreen(new MenuScreen(chess));
+            chess.setScreen(chess.menuScreen);
         }
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);

@@ -74,8 +74,6 @@ public class ChessBoard extends Container {
     protected void sizeChanged() {
         super.sizeChanged();
         System.out.println("ChessBoard size changed!!");
-
-
     }
     /* MUST be called before setting layout stuff in GameScreen */
     public void loadBoard()

@@ -49,8 +49,11 @@ public class Chess extends Game{
     public int userID;
     //TODO create some sort of authentication system.
     public String nickname;
+    /* We don't need more than one at a time */
+    public GameScreen gameScreen;
+    public MenuScreen menuScreen;
 
-	@Override
+    @Override
 	public void create () {
         playerList = new Array<Player>();
         gameRooms = new Array<GameRoom>();
@@ -82,8 +85,10 @@ public class Chess extends Game{
         network.addListener(new MasterListener(this));
         setScreen(new LoginScreen(this));
 
+        /* Screen work */
+        gameScreen = new GameScreen(this);
+        menuScreen = new MenuScreen(this);
 	}
-    public MenuScreen menuScreen;
 
 	@Override
 	public void render () {

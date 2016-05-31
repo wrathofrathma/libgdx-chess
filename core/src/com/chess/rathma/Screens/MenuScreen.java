@@ -27,7 +27,7 @@ import com.chess.rathma.Packets.ChallengeAcceptPacket;
 import com.chess.rathma.Packets.ChallengePacket;
 import com.chess.rathma.Packets.CreateGamePacket;
 import com.chess.rathma.Packets.RequestPacket;
-
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 
 
 public class MenuScreen implements Screen {
@@ -42,130 +42,19 @@ public class MenuScreen implements Screen {
 
     public ScrollPane challengePane;
     public List challengeList;
+    public List ongoingGames;
 
     /* Style & UI stuff */
     public BitmapFont font; //What the fuck is your purpose actually?
     Skin menuSkin;
 
+    public boolean gameAcceptFlag=false;
+
+
     public MenuScreen(final Chess chess)
     {
         this.chess = chess;
-        Gdx.graphics.setWindowedMode(600,800);
         /* Initialising components */
-        stage = new Stage();
-
-
-        /* Setting up listeners */
-        Gdx.input.setInputProcessor(stage);
-
-        /* Requesting information from the server */
-        chess.network.sendTCP(new RequestPacket(1)); //Get our UserID
-        chess.network.sendTCP(new RequestPacket(0)); //Request PlayerList
-        chess.network.sendTCP(new RequestPacket(2)); //Request challenges?
-
-
-        //TODO Stuff subject to move to show()
-        menuSkin = new Skin(Gdx.files.internal("menu.json"));
-        font = menuSkin.getFont("default-font");
-
-
-        /* Setting up our display */
-        table = new Table();
-        table.setBackground(new SpriteDrawable(new Sprite(menuSkin.getRegion("background"))));
-        table.setFillParent(true);
-        table.align(Align.topLeft); //Why the fuck would someone draw from the bottom of the screen?
-
-
-        stage.addActor(table);
-
-        //Enables debug lines.
-        //table.setDebug(true);
-
-        /* Organising the display! */
-        /* Giving our panes some depth by adding a background */
-        ScrollPane.ScrollPaneStyle paneStyle = new ScrollPane.ScrollPaneStyle();
-
-        playerList = new List(menuSkin);
-        playerListPane = new ScrollPane(playerList);
-        playerListPane.setStyle(paneStyle);
-        playerListPane.setScrollingDisabled(true,false);
-
-        challengeList = new List(menuSkin);
-        challengePane = new ScrollPane(challengeList);
-        challengePane.setStyle(paneStyle);
-        challengePane.setScrollingDisabled(true,false);
-        Label challengeLabel = new Label("Challenges",menuSkin);
-        Label playerLabel = new Label("Players online",menuSkin);
-
-        //table.setDebug(true);
-        /* Actually arranging our layout */
-        table.pad(10);
-        table.add(playerLabel)
-                .align(Align.left)
-                .padLeft(60).padTop(10);
-        table.add(challengeLabel)
-                .align(Align.right)
-                .padRight(78).padTop(10);
-        table.row();
-        table.add(playerListPane)
-                .expandX()
-                .expandY()
-                .align(Align.topLeft)
-                .padLeft(10).padTop(10)
-                .prefHeight(360)
-                .prefWidth(240);
-        table.add(challengePane)
-                .expandX()
-                .expandY()
-                .align(Align.topRight)
-                .padRight(10).padTop(10)
-                .prefHeight(360)
-                .prefWidth(240)
-                .minWidth(240)
-                .minHeight(360);
-
-        /* Setting up our chat box! */
-        table.row().padTop(10).expandY().minHeight(10); //This is to prevent any overlap hopefully!
-        table.add(chess.chatBox).align(Align.bottomLeft)
-                .expandY()
-                .padBottom(5).padTop(10)
-                .minWidth(560)
-                .prefWidth(Gdx.graphics.getWidth()).width(Gdx.graphics.getWidth()-20)
-                .prefHeight(200)
-                .maxHeight(200);
-
-
-        /* Setting up listeners for our different panes */
-        playerList.addListener(new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                super.clicked(event, x, y);
-                if(getTapCount()>=2)
-                {
-                    chess.network.sendTCP(new ChallengePacket(((PlayerLabel)playerList.getSelected()).player.id, chess.userID, -1));
-                }
-            }
-        });
-        challengeList.addListener(new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                super.clicked(event, x, y);
-                if(getTapCount()>=2)
-                {
-                    chess.network.sendTCP(new ChallengeAcceptPacket(((ChallengeLabel)challengeList.getSelected()).challenge.challengeID,chess.userID));
-                    synchronized (chess.challenges) {
-                        for (Challenge challenge : chess.challenges) {
-                            if (challenge.challengeID == ((ChallengeLabel) challengeList.getSelected()).challenge.challengeID) {
-                                chess.challenges.removeValue(challenge,true);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-
-
 
     }
     /* Only called on server shutdown */
@@ -192,7 +81,6 @@ public class MenuScreen implements Screen {
                             //For some reason, unlike every other object, the location of text objects is the top left rather than bottom left.
                             if(y<=label.getY() && y>=label.getY()-label.getHeight())
                             {
-                                System.out.println("Clicked label: " + label.text);
                                 label.clicked(chess);
                                 break;
                             }
@@ -236,8 +124,18 @@ public class MenuScreen implements Screen {
             }
             challengeList.setItems(challengeArray);
         }
-
-
+    }
+    public void updateGames()
+    {
+        synchronized (chess.gameRooms)
+        {
+            Array<GameLabel> gameRooms = new Array<GameLabel>();
+            for(GameRoom gameRoom : chess.gameRooms)
+            {
+                gameRooms.add(new GameLabel(gameRoom));
+            }
+            ongoingGames.setItems(gameRooms);
+        }
     }
 
     public synchronized void updatePlayerList()
@@ -262,19 +160,187 @@ public class MenuScreen implements Screen {
         }
      }
     @Override
+    public void hide() {
+        table.clearChildren();
+        table.clear();
+        stage.clear();
+    }
+    @Override
     public void show() {
 
+        Gdx.graphics.setWindowedMode(600,800);
+        /* Setting up listeners */
+        stage = new Stage();
+        Gdx.input.setInputProcessor(stage);
+
+        /* Requesting information from the server */
+        chess.network.sendTCP(new RequestPacket(1)); //Get our UserID
+        chess.network.sendTCP(new RequestPacket(0)); //Request PlayerList
+        chess.network.sendTCP(new RequestPacket(2)); //Request challenges?
+
+        menuSkin = new Skin(Gdx.files.internal("menu.json"));
+        font = menuSkin.getFont("default-font");
+
+        /* Setting up our display */
+        table = new Table();
+        table.setBackground(new SpriteDrawable(new Sprite(menuSkin.getRegion("background"))));
+        table.setFillParent(true);
+        table.align(Align.topLeft); //Why the fuck would someone draw from the bottom of the screen?
+
+        stage.addActor(table);
+
+        //table.setDebug(true);
+
+        /* Organising the display! */
+        /* Giving our panes some depth by adding a background */
+        ScrollPane.ScrollPaneStyle paneStyle = new ScrollPane.ScrollPaneStyle();
+
+        ongoingGames = new List(menuSkin);
+
+        playerList = new List(menuSkin);
+        playerListPane = new ScrollPane(playerList);
+        playerListPane.setStyle(paneStyle);
+        playerListPane.setScrollingDisabled(true,false);
+
+        challengeList = new List(menuSkin);
+        challengePane = new ScrollPane(challengeList);
+        challengePane.setStyle(paneStyle);
+        challengePane.setScrollingDisabled(true,false);
+
+        TextButton challengeToggle = new TextButton("Challenges",menuSkin);
+        TextButton openGamesToggle = new TextButton("Open Games",menuSkin);
+        challengeToggle.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                /* Switch to the challenge pane */
+                challengePane.setWidget(challengeList);
+            }
+        });
+        openGamesToggle.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+            /* Switch to open/ongoing games pane */
+                challengePane.setWidget(ongoingGames);
+            }
+        });
+
+
+        Label playerLabel = new Label("Players online",menuSkin);
+
+        //table.setDebug(true);
+        /* Actually arranging our layout */
+        table.pad(10);
+        table.add(playerLabel)
+                .align(Align.left)
+                .padLeft(60).padTop(10).padBottom(10);
+
+        table.add(challengeToggle)
+                .align(Align.bottomLeft)
+                .prefWidth(challengeToggle.getWidth())
+                .width(challengeToggle.getWidth())
+                .padTop(10);
+        table.add(openGamesToggle)
+                .align(Align.bottomLeft)
+                .prefWidth(openGamesToggle.getWidth())
+                .width(openGamesToggle.getWidth())
+                .padTop(10);
+        table.row();
+
+
+        table.add(playerListPane)
+                .expandX()
+                .expandY()
+                .align(Align.topLeft)
+                .padLeft(10)
+                .prefHeight(360)
+                .prefWidth(240);
+        table.add(challengePane)
+                .expandY()
+                .align(Align.topRight)
+                .padRight(10)
+                .prefHeight(360)
+                .prefWidth(240)
+                .minWidth(240)
+                .minHeight(360)
+                .colspan(2);
+
+        /* Setting up our chat box! */
+        table.row().padTop(10).expandY().minHeight(10); //This is to prevent any overlap hopefully!
+        table.add(chess.chatBox).align(Align.bottomLeft)
+                .expandY()
+                .padBottom(5).padTop(10)
+                .minWidth(560)
+                .prefWidth(Gdx.graphics.getWidth()).width(Gdx.graphics.getWidth()-20)
+                .prefHeight(200)
+                .maxHeight(200);
+
+        /* Setting up listeners for our different panes */
+        playerList.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                super.clicked(event, x, y);
+                if(getTapCount()>=2)
+                {
+                    chess.network.sendTCP(new ChallengePacket(((PlayerLabel)playerList.getSelected()).player.id, chess.userID, -1));
+                }
+            }
+        });
+        challengeList.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                super.clicked(event, x, y);
+                if(getTapCount()>=2)
+                {
+                    chess.network.sendTCP(new ChallengeAcceptPacket(((ChallengeLabel)challengeList.getSelected()).challenge.challengeID,chess.userID));
+                    synchronized (chess.challenges) {
+                        for (Challenge challenge : chess.challenges) {
+                            if (challenge.challengeID == ((ChallengeLabel) challengeList.getSelected()).challenge.challengeID) {
+                                chess.challenges.removeValue(challenge,true);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        ongoingGames.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                super.clicked(event, x, y);
+                if(getTapCount()>=2)
+                {
+                    /* Should probably implement some logic to get the actual game in session */
+                    System.out.println(((GameLabel)ongoingGames.getSelected()).gameRoom.toString());
+                    chess.gameScreen.activeGameID=((GameLabel)ongoingGames.getSelected()).gameRoom.gameID;
+                    //chess.menuScreen.hide();
+                    chess.setScreen(chess.gameScreen);
+                }
+            }
+        });
+
+        updateGames();
     }
 
     @Override
     public void render(float delta) {
         stage.act();
+        /*
         if(chess.gameRooms.size>0)
         {
             //TODO change this to this.hide() - Need to migrate most of hte constructor to the show() however.
             //TODO Also need to properly configure this.hide() to kill listeners
             this.dispose();
             chess.setScreen(new GameScreen(chess));
+        }*/
+        if(gameAcceptFlag)
+        {
+            this.hide();
+            /* Loading last added game */
+            if(chess.gameRooms.size>=1) {
+                chess.gameScreen.activeGameID=chess.gameRooms.get(chess.gameRooms.size - 1).gameID;
+                chess.setScreen(chess.gameScreen);
+            }
+            gameAcceptFlag=false;
         }
         if(titleUpdate)
         {
@@ -314,10 +380,7 @@ public class MenuScreen implements Screen {
 
     }
 
-    @Override
-    public void hide() {
 
-    }
 
     @Override
     public void dispose() {

@@ -15,6 +15,7 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Scaling;
 import com.chess.rathma.Packets.MovePacket;
 import com.chess.rathma.Packets.SurrenderPacket;
+import com.chess.rathma.Screens.GameScreen;
 
 /**
  * This will be the sidebar on the sides of games. Showing every move made, it'll hold a forfeit & draw icon and piece buffers.
@@ -26,8 +27,8 @@ import com.chess.rathma.Packets.SurrenderPacket;
  */
 public class Sidebar extends WidgetGroup {
     private Skin skin;
+    public GameScreen gameScreen;
     public GameRoom gameRoom;
-
     private TextureAtlas atlas = new TextureAtlas(Gdx.files.internal("sidebar.atlas"));
 
     /* Containers */
@@ -35,10 +36,11 @@ public class Sidebar extends WidgetGroup {
     private ScrollPane movePane;
     private Table moveList;
 
-    public Sidebar(final GameRoom gameRoom, Skin skin)
+    public Sidebar(final GameScreen gameScreen, Skin skin)
     {
         this.skin = skin;
-        this.gameRoom = gameRoom;
+        this.gameScreen = gameScreen;
+        this.gameRoom = gameScreen.gameRoom;
 
         /* Let's initialise everything */
         table = new Table(skin);
@@ -78,11 +80,12 @@ public class Sidebar extends WidgetGroup {
 
         Image home = new Image(atlas.findRegion("home"));
         home.setSize(24,24);
-        home.addListener(new ImageListener(gameRoom.chess){
+        home.addListener(new ImageListener(gameScreen.chess){
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
-                gameRoom.state = GameRoom.GameState.DESTROY;
+                gameScreen.menuSwitch=true;
+               // gameRoom.state = GameRoom.GameState.DESTROY;
             }
         });
         /* Organisation of our icon group */
@@ -91,11 +94,10 @@ public class Sidebar extends WidgetGroup {
 
        // table.setDebug(true);
         /* Organisation of primary table */
-        table.add(player1Icon)
-            .align(Align.topLeft)
-            .maxHeight(24)
-            .maxWidth(24);
-        table.add(player1)
+        table.add(player2Icon).align(Align.topLeft)
+                .maxHeight(24)
+                .maxWidth(24);
+        table.add(player2)
                 .align(Align.left)
                 .expandX();
         table.row();
@@ -118,14 +120,17 @@ public class Sidebar extends WidgetGroup {
             .maxHeight(24)
             .maxWidth(24);
         table.row();
-        table.add(player2Icon).align(Align.topLeft)
+        table.add(player1Icon)
+                .align(Align.topLeft)
                 .maxHeight(24)
                 .maxWidth(24);
-        table.add(player2)
+        table.add(player1)
                 .align(Align.left)
                 .expandX();
 
         this.addActor(table);
+
+        loadMoves();
     }
     /* We'll call this once the game is over so we can rearrange things */
     public void gameEnd(String gameEnd)
@@ -162,11 +167,10 @@ public class Sidebar extends WidgetGroup {
 
         // table.setDebug(true);
         /* Organisation of primary table */
-        table.add(player1Icon)
-                .align(Align.topLeft)
+        table.add(player2Icon).align(Align.topLeft)
                 .maxHeight(24)
                 .maxWidth(24);
-        table.add(player1)
+        table.add(player2)
                 .align(Align.left)
                 .expandX();
         table.row();
@@ -189,16 +193,25 @@ public class Sidebar extends WidgetGroup {
                 .maxHeight(24)
                 .maxWidth(24);
         table.row();
-        table.add(player2Icon).align(Align.topLeft)
+        table.add(player1Icon)
+                .align(Align.topLeft)
                 .maxHeight(24)
                 .maxWidth(24);
-        table.add(player2)
+        table.add(player1)
                 .align(Align.left)
                 .expandX();
         table.row();
         table.add(endGameLabel).colspan(2)
             .align(Align.left)
             .expandX();
+    }
+    public void loadMoves()
+    {
+        if(gameRoom.moves!=null) {
+            for (MovePacket move : gameRoom.moves) {
+                addMove(move);
+            }
+        }
     }
     public void addMove(MovePacket m)
     {
