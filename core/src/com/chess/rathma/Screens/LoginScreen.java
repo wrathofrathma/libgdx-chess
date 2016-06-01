@@ -14,6 +14,8 @@ import com.chess.rathma.Packets.IdentPacket;
 import com.chess.rathma.Packets.PublicKeyPacket;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 
 public class LoginScreen implements Screen {
@@ -84,11 +86,24 @@ public class LoginScreen implements Screen {
                         }
                     }
                     else if(chess.keySet) {
-                        byte[] username = userTextField.getText().getBytes("utf-8");
-                        System.out.println("Unencrypted username: " + new String(username,"utf-8"));
-                        byte[] encrypted = chess.keyModule.encrypt(username,chess.sessionKey);
-                        IdentPacket packet = new IdentPacket(encrypted);
-                        chess.network.sendTCP(packet);
+                        try {
+                            byte[] username = userTextField.getText().getBytes("utf-8");
+                            byte[] encryptedUser = chess.keyModule.encrypt(username, chess.sessionKey);
+                            MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+                            //byte[] password = sha256.digest(passwordTextField.getText().getBytes("utf-8"));
+                            byte[] password = passwordTextField.getText().getBytes("utf-8");
+                            System.out.println("Password hash: " + password + " || " + password.hashCode());
+
+                            byte[] encryptedPassword = chess.keyModule.encrypt(password,chess.sessionKey);
+                            System.out.println("Password hash: " + encryptedPassword + " || " + encryptedPassword.hashCode());
+
+                            IdentPacket packet = new IdentPacket(encryptedUser,encryptedPassword);
+                            chess.network.sendTCP(packet);
+                        } catch (NoSuchAlgorithmException e)
+                        {
+                            e.printStackTrace();
+                        }
+
                     }
                     else {
                         chess.network.sendTCP(new PublicKeyPacket(chess.keyModule.getKeys().getPublic().getEncoded()));
@@ -123,11 +138,24 @@ public class LoginScreen implements Screen {
                             }
                         }
                         else if(chess.keySet) {
-                            byte[] username = userTextField.getText().getBytes("utf-8");
-                            System.out.println("Unencrypted username: " + new String(username,"utf-8"));
-                            byte[] encrypted = chess.keyModule.encrypt(username,chess.sessionKey);
-                            IdentPacket packet = new IdentPacket(encrypted);
-                            chess.network.sendTCP(packet);
+                            try {
+                                byte[] username = userTextField.getText().getBytes("utf-8");
+                                byte[] encryptedUser = chess.keyModule.encrypt(username, chess.sessionKey);
+                                MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+                                //byte[] password = sha256.digest(passwordTextField.getText().getBytes("utf-8"));
+                                byte[] password = passwordTextField.getText().getBytes("utf-8");
+
+                                System.out.println("Password hash: " + password + " || " + password.hashCode());
+
+                                byte[] encryptedPassword = chess.keyModule.encrypt(password,chess.sessionKey);
+                                System.out.println("Password hash: " + encryptedPassword + " || " + encryptedPassword.hashCode());
+
+                                IdentPacket packet = new IdentPacket(encryptedUser,encryptedPassword);
+                                chess.network.sendTCP(packet);
+                            } catch (NoSuchAlgorithmException e)
+                            {
+                                e.printStackTrace();
+                            }
                         }
                         else {
                             chess.network.sendTCP(new PublicKeyPacket(chess.keyModule.getKeys().getPublic().getEncoded()));
@@ -160,14 +188,26 @@ public class LoginScreen implements Screen {
                                     chess.network.sendTCP(new PublicKeyPacket(chess.keyModule.getKeys().getPublic().getEncoded()));
                                 }
                             }
-
                         }
                         else {
-                            byte[] username = userTextField.getText().getBytes("utf-8");
-                            System.out.println("Unencrypted username: " + new String(username,"utf-8"));
-                            byte[] encrypted = chess.keyModule.encrypt(username,chess.sessionKey);
-                            IdentPacket packet = new IdentPacket(encrypted);
-                            chess.network.sendTCP(packet);
+                            try {
+                                byte[] username = userTextField.getText().getBytes("utf-8");
+                                byte[] encryptedUser = chess.keyModule.encrypt(username, chess.sessionKey);
+                                MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+                                //byte[] password = sha256.digest(passwordTextField.getText().getBytes("utf-8"));
+                                byte[] password = passwordTextField.getText().getBytes("utf-8");
+                                System.out.println("Password hash: " + password + " || " + password.hashCode());
+
+                                byte[] encryptedPassword = chess.keyModule.encrypt(password,chess.sessionKey);
+                                System.out.println("Password hash: " + encryptedPassword + " || " + encryptedPassword.hashCode());
+
+
+                                IdentPacket packet = new IdentPacket(encryptedUser,encryptedPassword);
+                                chess.network.sendTCP(packet);
+                            } catch (NoSuchAlgorithmException e)
+                            {
+                                e.printStackTrace();
+                            }
                         }
                     } catch (IOException e)
                     {
