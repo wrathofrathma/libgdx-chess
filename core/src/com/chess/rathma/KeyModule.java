@@ -34,7 +34,7 @@ public class KeyModule {
     private static String keyPairAlgorithm = "RSA";
     private static String secretKeyAlgorithm = "AES";
     private static String encryptionAlgorithm = "AES/ECB/PKCS5Padding";
-    private static int encryptionKeySize = 256;
+    private static int encryptionKeySize = 128;
     private static int keyPairSize = 1024;
 
     private static KeyPairGenerator keyPairGenerator;

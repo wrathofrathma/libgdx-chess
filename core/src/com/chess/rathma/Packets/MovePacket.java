@@ -26,6 +26,17 @@ public class MovePacket {
         this.y1 = y1;
         this.gameID=gameID;
     }
+    public MovePacket(int gameID, int x1, int y1, int x2, int y2,int playerID)
+    {
+        this.playerID = playerID;
+        this.x1 = x1;
+        this.x2 = x2;
+        this.y2 = y2;
+        this.y1 = y1;
+        this.gameID=gameID;
+    }
+
+
     public int boardID;
     public int playerID;
     public MovePacket(){}
@@ -33,8 +44,7 @@ public class MovePacket {
     public int x1, y1;
     public int x2, y2;
     public int gameID;
-    public boolean turnswitch=true;
-
+    public boolean turnswitch=true; //Wow, I fucking thought ahead.
     @Override
     public String toString() {
         return "("+x1+","+y1+") to ("+x2+","+y2+")";

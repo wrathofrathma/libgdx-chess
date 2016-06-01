@@ -95,7 +95,6 @@ public class LoginScreen implements Screen {
                             System.out.println("Password hash: " + password + " || " + password.hashCode());
 
                             byte[] encryptedPassword = chess.keyModule.encrypt(password,chess.sessionKey);
-                            System.out.println("Password hash: " + encryptedPassword + " || " + encryptedPassword.hashCode());
 
                             IdentPacket packet = new IdentPacket(encryptedUser,encryptedPassword);
                             chess.network.sendTCP(packet);

@@ -228,9 +228,8 @@ public class GameScreen implements Screen{
     //Still should drop us in the menuhowever.
     public void destroyGame()
     {
-        this.dispose();
         //TODO change this to chess.menuScreen after we change it to not kill itself.
-        chess.setScreen(new MenuScreen(chess));
+        chess.setScreen(chess.menuScreen);
     }
 
     @Override

@@ -51,12 +51,6 @@ public class MasterListener extends Listener{
             System.out.println((String) object);
         }
 
-        /* We're going to put in some work here. Finally decided on a structure.*/
-        else if(object instanceof MovePacket)
-        {
-            /* Iterate through the instances of games for the GameID and then pass the move */
-        }
-
         else if(object instanceof PlayerInfoPacket)
         {
             PlayerInfoPacket packet = (PlayerInfoPacket)object;
@@ -186,9 +180,9 @@ public class MasterListener extends Listener{
                 }
             }
         }
-
         else if(object instanceof MovePacket) {
             MovePacket packet = (MovePacket) object;
+            System.out.println("Move packet!");
             /* Server commands are absolute! */
             synchronized (chess.gameRooms) {
                 if (chess.getScreen() instanceof GameScreen) {

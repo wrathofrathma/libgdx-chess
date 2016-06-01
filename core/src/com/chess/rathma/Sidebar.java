@@ -85,7 +85,6 @@ public class Sidebar extends WidgetGroup {
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
                 gameScreen.menuSwitch=true;
-               // gameRoom.state = GameRoom.GameState.DESTROY;
             }
         });
         /* Organisation of our icon group */
