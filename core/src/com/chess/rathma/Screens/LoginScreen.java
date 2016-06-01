@@ -11,6 +11,7 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.chess.rathma.Chess;
 import com.chess.rathma.Packets.IdentPacket;
+import com.chess.rathma.Packets.PublicKeyPacket;
 
 import java.io.IOException;
 
@@ -25,6 +26,10 @@ public class LoginScreen implements Screen {
     {
         this.chess = chess;
     }
+    Label statusLabel;
+    TextField userTextField;
+    TextField passwordTextField;
+    TextField serverTextField;
 
     @Override
     public void show() {
@@ -35,20 +40,22 @@ public class LoginScreen implements Screen {
         Gdx.input.setInputProcessor(stage);
 
         /* Let's change the size of the window, since we don't have much to fill the empty space */
-        Label userLabel = new Label("Username: ", skin);
+        final Label userLabel = new Label("Username: ", skin);
         Label passwordLabel = new Label("Password: ",skin);
         final Label serverLabel = new Label("Server: ", skin);
+        statusLabel = new Label("Disconnected",skin);
 
-        final TextField userTextField = new TextField("",skin);
-        final TextField passwordTextField = new TextField("",skin);
-        final TextField serverTextField = new TextField("",skin);
+        userTextField = new TextField("",skin);
+        passwordTextField = new TextField("",skin);
+        serverTextField = new TextField("",skin);
 
         /* Setting up our text fields */
         passwordTextField.setMessageText("Disabled!");
         passwordTextField.setPasswordMode(true);
         passwordTextField.setPasswordCharacter('*');
         passwordTextField.setDisabled(true);
-
+        userTextField.setDisabled(true);
+        userTextField.setMessageText("Disabled!");
 
         serverTextField.setText("Chess Network");
 
@@ -65,21 +72,28 @@ public class LoginScreen implements Screen {
                             chess.network.connect(5000, "2601:145:c300:4910:9232:47cc:a8bd:c810", 7667);
                             if (chess.network.isConnected()) {
                                 serverTextField.setDisabled(true);
-                                chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                                chess.network.sendTCP(new PublicKeyPacket(chess.keyModule.getKeys().getPublic().getEncoded()));
                             }
                         }
                         else {
                             chess.network.connect(5000, serverTextField.getText(), 7667);
                             if (chess.network.isConnected()) {
                                 serverTextField.setDisabled(true);
-                                chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                                chess.network.sendTCP(new PublicKeyPacket(chess.keyModule.getKeys().getPublic().getEncoded()));
                             }
                         }
-
+                    }
+                    else if(chess.keySet) {
+                        byte[] username = userTextField.getText().getBytes("utf-8");
+                        System.out.println("Unencrypted username: " + new String(username,"utf-8"));
+                        byte[] encrypted = chess.keyModule.encrypt(username,chess.sessionKey);
+                        IdentPacket packet = new IdentPacket(encrypted);
+                        chess.network.sendTCP(packet);
                     }
                     else {
-                        chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                        chess.network.sendTCP(new PublicKeyPacket(chess.keyModule.getKeys().getPublic().getEncoded()));
                     }
+
                 } catch (IOException e)
                 {
                     e.printStackTrace();
@@ -97,20 +111,26 @@ public class LoginScreen implements Screen {
                                 chess.network.connect(5000, "2601:145:c300:4910:9232:47cc:a8bd:c810", 7667);
                                 if (chess.network.isConnected()) {
                                     serverTextField.setDisabled(true);
-                                    chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                                    chess.network.sendTCP(new PublicKeyPacket(chess.keyModule.getKeys().getPublic().getEncoded()));
                                 }
                             }
                             else {
                                 chess.network.connect(5000, serverTextField.getText(), 7667);
                                 if (chess.network.isConnected()) {
                                     serverTextField.setDisabled(true);
-                                    chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                                    chess.network.sendTCP(new PublicKeyPacket(chess.keyModule.getKeys().getPublic().getEncoded()));
                                 }
                             }
-
+                        }
+                        else if(chess.keySet) {
+                            byte[] username = userTextField.getText().getBytes("utf-8");
+                            System.out.println("Unencrypted username: " + new String(username,"utf-8"));
+                            byte[] encrypted = chess.keyModule.encrypt(username,chess.sessionKey);
+                            IdentPacket packet = new IdentPacket(encrypted);
+                            chess.network.sendTCP(packet);
                         }
                         else {
-                            chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                            chess.network.sendTCP(new PublicKeyPacket(chess.keyModule.getKeys().getPublic().getEncoded()));
                         }
                     } catch (IOException e)
                     {
@@ -130,20 +150,24 @@ public class LoginScreen implements Screen {
                                 chess.network.connect(5000, "2601:145:c300:4910:9232:47cc:a8bd:c810", 7667);
                                 if (chess.network.isConnected()) {
                                     serverTextField.setDisabled(true);
-                                    chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                                    chess.network.sendTCP(new PublicKeyPacket(chess.keyModule.getKeys().getPublic().getEncoded()));
                                 }
                             }
                             else {
                                 chess.network.connect(5000, serverTextField.getText(), 7667);
                                 if (chess.network.isConnected()) {
                                     serverTextField.setDisabled(true);
-                                    chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                                    chess.network.sendTCP(new PublicKeyPacket(chess.keyModule.getKeys().getPublic().getEncoded()));
                                 }
                             }
 
                         }
                         else {
-                            chess.network.sendTCP(new IdentPacket(userTextField.getText()));
+                            byte[] username = userTextField.getText().getBytes("utf-8");
+                            System.out.println("Unencrypted username: " + new String(username,"utf-8"));
+                            byte[] encrypted = chess.keyModule.encrypt(username,chess.sessionKey);
+                            IdentPacket packet = new IdentPacket(encrypted);
+                            chess.network.sendTCP(packet);
                         }
                     } catch (IOException e)
                     {
@@ -198,8 +222,23 @@ public class LoginScreen implements Screen {
             .padBottom(5)
             .expandX()
             .colspan(2);
+        table.row().expandY().expandX();
+        table.add(statusLabel).align(Align.bottom).expandX().colspan(2);
+
     }
 
+    public void connected(){
+        statusLabel.setText("Connected!");
+    }
+    public void keysExchanged()
+    {
+        statusLabel.setText("Keys exchanged!");
+        userTextField.setDisabled(false);
+        userTextField.setMessageText("");
+        passwordTextField.setDisabled(false);
+        passwordTextField.setMessageText("");
+
+    }
     @Override
     public void render(float delta) {
         stage.act();

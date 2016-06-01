@@ -11,10 +11,22 @@ import com.chess.rathma.Packets.*;
 import com.chess.rathma.Screens.GameScreen;
 import com.chess.rathma.Screens.LoginScreen;
 import com.chess.rathma.Screens.MenuScreen;
+import com.esotericsoftware.kryo.Serializer;
+import com.esotericsoftware.kryo.serializers.DefaultSerializers;
+import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.esotericsoftware.kryonet.Client;
+import com.rathma.crypto.serialisers.AESSerialiser;
 
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import java.io.IOException;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.Vector;
 
 public class Chess extends Game{
@@ -47,12 +59,14 @@ public class Chess extends Game{
 
     /* Our actual identification from the network! */
     public int userID;
+    public KeyModule keyModule;
     //TODO create some sort of authentication system.
     public String nickname;
     /* We don't need more than one at a time */
     public GameScreen gameScreen;
     public MenuScreen menuScreen;
-
+    public static SecretKey sessionKey;
+    public boolean keySet=false;
     @Override
 	public void create () {
         playerList = new Array<Player>();
@@ -60,10 +74,11 @@ public class Chess extends Game{
         challenges = new Array<Challenge>();
         chatBox = new ChatBox(this);
 
+        keyModule = new KeyModule(); //Generates our new keys
+
         batch = new SpriteBatch();
         network = new Client();
         network.start(); //Starts the thread and handles reading/writing of the socket. Also notifies listeners.
-        network.getKryo().register(MessagePacket.class);
         network.getKryo().register(MovePacket.class);
         network.getKryo().register(RequestPacket.class);
         network.getKryo().register(PlayerListPacket.class);
@@ -80,8 +95,13 @@ public class Chess extends Game{
         network.getKryo().register(ServerShutdownPacket.class);
         network.getKryo().register(PromotionPacket.class);
         network.getKryo().register(PromotionAccept.class);
-        network.getKryo().register(IdentPacket.class);
         network.getKryo().register(SurrenderPacket.class);
+        network.getKryo().register(IdentPacket.class);
+        network.getKryo().register(MessagePacket.class);
+        network.getKryo().register(byte[].class);
+        network.getKryo().register(PublicKeyPacket.class);
+        network.getKryo().register(SecretKeyPacket.class);
+
         network.addListener(new MasterListener(this));
         setScreen(new LoginScreen(this));
 

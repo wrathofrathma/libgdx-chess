@@ -11,6 +11,10 @@ import com.chess.rathma.Screens.LoginScreen;
 import com.chess.rathma.Screens.MenuScreen;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
+import com.esotericsoftware.minlog.Log;
+
+import javax.crypto.SecretKey;
+import java.io.UnsupportedEncodingException;
 
 /**
  * We don't need any other listeners other than this in a chess game.
@@ -154,10 +158,20 @@ public class MasterListener extends Listener{
                     chess.menuScreen.gameAcceptFlag=true;
             }
         }
-
+        else if(object instanceof SecretKeyPacket)
+        {
+            SecretKeyPacket packet = (SecretKeyPacket)object;
+            chess.sessionKey = (SecretKey)chess.keyModule.unwrapSecretKey(packet.key,chess.keyModule.getKeys().getPrivate());
+            chess.keySet = true;
+            System.out.println("Session key received: " + chess.sessionKey.hashCode());
+            if(chess.getScreen() instanceof LoginScreen)
+            {
+                ((LoginScreen)chess.getScreen()).keysExchanged();
+            }
+        }
         /* *************************************************************************/
         /* We have to handle this here since we need access to the specific screen to trigger events - Fuck polling*/
-        if(object instanceof BoardPosition)
+        else if(object instanceof BoardPosition)
         {
             BoardPosition packet = (BoardPosition)object;
             //First we can check if the activeGameID fits, if not we search for it in the array. We can separate the triggering of events this way.
@@ -172,6 +186,7 @@ public class MasterListener extends Listener{
                 }
             }
         }
+
         else if(object instanceof MovePacket) {
             MovePacket packet = (MovePacket) object;
             /* Server commands are absolute! */
