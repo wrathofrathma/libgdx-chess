@@ -102,6 +102,34 @@ public class Piece extends Actor {
         }
     }
 
+    public float grabBlackX()
+    {
+        if(gameRoom.colour==GameRoom.COLOUR.BLACK)
+        {
+            switch(locx)
+            {
+                case 0:
+                    return 7 * boardMultiplier;
+                case 1:
+                    return 6 * boardMultiplier;
+                case 2:
+                    return 5 * boardMultiplier;
+                case 3:
+                    return 4 * boardMultiplier;
+                case 4:
+                    return 3 * boardMultiplier;
+                case 5:
+                    return 2 * boardMultiplier;
+                case 6:
+                    return 1 * boardMultiplier;
+                case 7:
+                    return 0 * boardMultiplier;
+            }
+            return 0;
+        }
+        else
+            return locx * boardMultiplier;
+    }
     public int grabBlackLoc(int loc)
     {
         if(loc==-1) {
@@ -166,7 +194,7 @@ public class Piece extends Actor {
             this.locy = y;
             setTouchable(Touchable.enabled);
             boardMultiplier = ((chessBoard.getWidth() + chessBoard.getHeight()) / 2) / 8;
-            setBounds(x * boardMultiplier, grabBlackY(), boardMultiplier, boardMultiplier);
+            setBounds(grabBlackX(), grabBlackY(), boardMultiplier, boardMultiplier);
             this.addListener(new PieceListener(this));
         }
         else
@@ -182,7 +210,7 @@ public class Piece extends Actor {
             setTouchable(Touchable.enabled);
             boardMultiplier = ((chessBoard.getWidth() + chessBoard.getHeight()) / 2) / 8;
 
-            setBounds(x*boardMultiplier,grabBlackY(),boardMultiplier,boardMultiplier);
+            setBounds(grabBlackX(),grabBlackY(),boardMultiplier,boardMultiplier);
         }
 
     }

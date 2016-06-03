@@ -98,7 +98,7 @@ public class ChessBoard extends Container {
         setActor(pieces);
 
         if(gameRoom!=null && gameRoom.colour== GameRoom.COLOUR.BLACK)
-            texture.flip(true,false);
+            texture.flip(false,false);
 
     }
 

@@ -116,6 +116,7 @@ public class GameRoom {
     /* Expected input: Piece's old X & Y, new coordinates */
     public void Move(Piece piece, MovePacket movePacket, Array<Actor> actors)
     {
+
         board[movePacket.x2][movePacket.y2]=board[piece.locx][piece.locy];
         /* Absolute position */
         for(Actor actor : actors)
@@ -133,11 +134,14 @@ public class GameRoom {
         piece.locx = movePacket.x2;
         piece.locy = movePacket.y2;
         /* Board position */
-        if(piece.gameRoom.colour==COLOUR.BLACK)
+        if(piece.gameRoom.colour==COLOUR.BLACK) {
+            piece.setX(piece.grabBlackX());
             piece.setY(piece.grabBlackY());
-        else
-            piece.setY(piece.locy*piece.boardMultiplier);
-        piece.setX(piece.locx*piece.boardMultiplier);
+        }
+        else {
+            piece.setY(piece.locy * piece.boardMultiplier);
+            piece.setX(piece.locx * piece.boardMultiplier);
+        }
         moves.add(movePacket);
     }
     public void Move(MovePacket movePacket)
@@ -157,22 +161,28 @@ public class GameRoom {
         System.out.println("Attempting move: " + newx + " " + newy);
         if(isValidMove(piece, newx, newy))
         {
-            piece.setX(piece.locx*piece.boardMultiplier);
-            if(piece.gameRoom.colour==COLOUR.BLACK)
+            if(piece.gameRoom.colour==COLOUR.BLACK) {
                 piece.setY(piece.grabBlackY());
-            else
-                piece.setY(piece.locy*piece.boardMultiplier);
+                piece.setX(piece.grabBlackX());
+            }
+            else {
+                piece.setX(piece.locx*piece.boardMultiplier);
+                piece.setY(piece.locy * piece.boardMultiplier);
+            }
             chess.network.sendTCP(new MovePacket(piece.gameRoom.gameID,piece.chessBoard.boardID,piece.locx, piece.locy, newx, newy,chess.userID));
             return true;
         }
         else
         {
             //Return back to original position & don't fire a packet
-            piece.setX(piece.locx*piece.boardMultiplier);
-            if(piece.gameRoom.colour==COLOUR.BLACK)
+            if(piece.gameRoom.colour==COLOUR.BLACK) {
                 piece.setY(piece.grabBlackY());
-            else
-                piece.setY(piece.locy*piece.boardMultiplier);
+                piece.setX(piece.grabBlackX());
+            }
+            else {
+                piece.setX(piece.locx*piece.boardMultiplier);
+                piece.setY(piece.locy * piece.boardMultiplier);
+            }
         }
 
         return true;

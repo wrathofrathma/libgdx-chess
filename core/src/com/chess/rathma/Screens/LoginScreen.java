@@ -90,8 +90,8 @@ public class LoginScreen implements Screen {
                             byte[] username = userTextField.getText().getBytes("utf-8");
                             byte[] encryptedUser = chess.keyModule.encrypt(username, chess.sessionKey);
                             MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
-                            //byte[] password = sha256.digest(passwordTextField.getText().getBytes("utf-8"));
-                            byte[] password = passwordTextField.getText().getBytes("utf-8");
+                            byte[] password = sha256.digest(passwordTextField.getText().getBytes("utf-8"));
+                            //byte[] password = passwordTextField.getText().getBytes("utf-8");
                             System.out.println("Password hash: " + password + " || " + password.hashCode());
 
                             byte[] encryptedPassword = chess.keyModule.encrypt(password,chess.sessionKey);
@@ -102,7 +102,6 @@ public class LoginScreen implements Screen {
                         {
                             e.printStackTrace();
                         }
-
                     }
                     else {
                         chess.network.sendTCP(new PublicKeyPacket(chess.keyModule.getKeys().getPublic().getEncoded()));
@@ -141,8 +140,8 @@ public class LoginScreen implements Screen {
                                 byte[] username = userTextField.getText().getBytes("utf-8");
                                 byte[] encryptedUser = chess.keyModule.encrypt(username, chess.sessionKey);
                                 MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
-                                //byte[] password = sha256.digest(passwordTextField.getText().getBytes("utf-8"));
-                                byte[] password = passwordTextField.getText().getBytes("utf-8");
+                                byte[] password = sha256.digest(passwordTextField.getText().getBytes("utf-8"));
+                                //byte[] password = passwordTextField.getText().getBytes("utf-8");
 
                                 System.out.println("Password hash: " + password + " || " + password.hashCode());
 
@@ -193,8 +192,8 @@ public class LoginScreen implements Screen {
                                 byte[] username = userTextField.getText().getBytes("utf-8");
                                 byte[] encryptedUser = chess.keyModule.encrypt(username, chess.sessionKey);
                                 MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
-                                //byte[] password = sha256.digest(passwordTextField.getText().getBytes("utf-8"));
-                                byte[] password = passwordTextField.getText().getBytes("utf-8");
+                                byte[] password = sha256.digest(passwordTextField.getText().getBytes("utf-8"));
+                                //byte[] password = passwordTextField.getText().getBytes("utf-8");
                                 System.out.println("Password hash: " + password + " || " + password.hashCode());
 
                                 byte[] encryptedPassword = chess.keyModule.encrypt(password,chess.sessionKey);

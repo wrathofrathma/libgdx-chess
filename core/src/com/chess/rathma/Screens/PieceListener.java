@@ -79,14 +79,17 @@ public class PieceListener extends ClickListener{
     @Override
     public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
         super.touchUp(event, x, y, pointer, button);
-        int newx = (int)((piece.getX()+piece.getWidth()/2)/piece.boardMultiplier);
+        int newx =0;
         int newy=0; //just need to initialise it.
         if(piece.gameRoom.colour== GameRoom.COLOUR.BLACK)
         {
             newy = (int) ((piece.getY() + piece.getHeight() / 2) / piece.boardMultiplier);
+            newx = (int)((piece.getX()+piece.getWidth()/2)/piece.boardMultiplier);
+            newx = piece.grabBlackLoc(newx);
             newy = piece.grabBlackLoc(newy);
         }
         else {
+            newx = (int)((piece.getX()+piece.getWidth()/2)/piece.boardMultiplier);
             newy = (int) ((piece.getY() + piece.getHeight() / 2) / piece.boardMultiplier);
         }
         System.out.println("New x & y " + x + " " + y);
@@ -95,12 +98,14 @@ public class PieceListener extends ClickListener{
         }
         else
         {
-            piece.setX((piece.locx*piece.boardMultiplier));
             if(piece.gameRoom.colour== GameRoom.COLOUR.BLACK) {
                 piece.setY(piece.grabBlackY());
+                piece.setX(piece.grabBlackX());
+                System.out.println("Set piece down at: " + piece.grabBlackX() + " " + piece.grabBlackY());
             }
             else {
                 piece.setY(piece.locy * piece.boardMultiplier);
+                piece.setX((piece.locx*piece.boardMultiplier));
             }
         }
     }

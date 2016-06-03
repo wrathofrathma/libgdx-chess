@@ -35,7 +35,11 @@ public class MovePacket {
         this.y1 = y1;
         this.gameID=gameID;
     }
-
+    public int specialID; //This is for special moves like castling or en passant.
+    /* 0 = no speical move
+       1 = castling
+       2 = en passant
+     */
 
     public int boardID;
     public int playerID;
